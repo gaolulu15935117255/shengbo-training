@@ -1,7 +1,11 @@
 <view class="container" wx:if="{{course}}">
   <view class="card header">
-    <view class="title">{{course.title}}</view>
-    <view class="meta">{{course.level}} · {{course.duration}}</view>
+    <view class="title-row">
+      <view class="title">{{course.title}}</view>
+      <text class="tag tag-free" wx:if="{{course.free}}">免费</text>
+      <text class="tag tag-lock" wx:elif="{{!hasAccess}}">付费</text>
+    </view>
+    <view class="meta">{{course.level}} · {{course.duration}} · {{priceText}}</view>
     <view class="desc">{{course.desc}}</view>
   </view>
 
@@ -13,7 +17,21 @@
     </view>
   </view>
 
-  <view class="btn-primary action" bindtap="startLearn">
-    {{learned ? "继续学习" : "开始学习"}}
+  <view class="section-title">课时列表</view>
+  <view class="card">
+    <view class="lesson-item" wx:for="{{course.lessons}}" wx:key="title">
+      <text class="lesson-icon">▶</text>
+      <view class="lesson-info">
+        <view>{{item.title}}</view>
+        <view class="lesson-duration">{{item.duration}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="action-row">
+    <view class="btn-outline half-btn" bindtap="goQuiz">配套刷题</view>
+    <view class="btn-primary half-btn" bindtap="startLearn">
+      {{hasAccess ? (learned ? '继续学习' : '开始学习') : '解锁课程'}}
+    </view>
   </view>
 </view>

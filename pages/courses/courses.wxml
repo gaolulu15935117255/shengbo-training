@@ -12,18 +12,20 @@
   </scroll-view>
 
   <view
-    class="card course-card"
+    class="card course-card {{item.locked ? 'locked-card' : ''}}"
     wx:for="{{list}}"
     wx:key="id"
     bindtap="goDetail"
     data-id="{{item.id}}"
   >
-    <view class="course-title">{{item.title}}</view>
+    <view class="course-header">
+      <view class="course-title">{{item.title}}</view>
+      <text class="tag tag-free" wx:if="{{item.free}}">免费</text>
+      <text class="tag tag-lock" wx:elif="{{item.locked}}">付费</text>
+    </view>
     <view class="course-desc">{{item.desc}}</view>
-    <view class="course-meta">{{item.level}} · {{item.duration}}</view>
+    <view class="course-meta">{{item.level}} · {{item.duration}} · {{item.priceText}}</view>
   </view>
 
   <view wx:if="{{list.length === 0}}" class="empty">该分类暂无课程</view>
 </view>
-
-<tab-bar active="courses" />

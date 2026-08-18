@@ -1,0 +1,7 @@
+<view class="container" wx:if="{{announcement}}">
+  <view class="card">
+    <view class="title">{{announcement.title}}</view>
+    <view class="date">{{announcement.date}}</view>
+    <view class="content">{{announcement.content}}</view>
+  </view>
+</view>

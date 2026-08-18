@@ -1,0 +1,37 @@
+<view class="container">
+  <scroll-view class="chips" scroll-x>
+    <view
+      class="chip {{activeType === item.id ? 'chip-active' : ''}}"
+      wx:for="{{types}}"
+      wx:key="id"
+      bindtap="switchType"
+      data-id="{{item.id}}"
+    >
+      {{item.name}}
+    </view>
+  </scroll-view>
+
+  <view class="card product-card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="product-row">
+      <view class="product-cover" style="background: {{item.cover}}">
+        {{item.type === 'membership' ? 'VIP' : '课'}}
+      </view>
+      <view class="product-info">
+        <view class="product-title">{{item.title}}</view>
+        <view class="product-desc">{{item.desc}}</view>
+        <view class="product-bottom">
+          <view class="price-row">
+            <text class="price">¥{{item.price}}</text>
+            <text class="original">¥{{item.originalPrice}}</text>
+          </view>
+          <text class="tag" wx:if="{{item.purchased}}">已购买</text>
+          <text class="sales">{{item.sales}}人购买</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{list.length === 0}}" class="empty">暂无商品</view>
+</view>
+
+<tab-bar active="shop" />

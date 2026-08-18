@@ -1,0 +1,51 @@
+<view class="container">
+  <!-- 学习数据 -->
+  <view class="card stats-card">
+    <view class="stats-grid">
+      <view class="sg-item">
+        <view class="sg-value">{{stats.totalAnswered || 0}}</view>
+        <view class="sg-label">累计刷题</view>
+      </view>
+      <view class="sg-item">
+        <view class="sg-value">{{accuracy}}%</view>
+        <view class="sg-label">正确率</view>
+      </view>
+      <view class="sg-item">
+        <view class="sg-value">{{stats.examHighScore || 0}}</view>
+        <view class="sg-label">考试最高分</view>
+      </view>
+      <view class="sg-item">
+        <view class="sg-value">{{stats.studyDays || 1}}</view>
+        <view class="sg-label">学习天数</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 题库分类 -->
+  <view class="section-title">题库分类</view>
+  <view class="card category-card" wx:for="{{categories}}" wx:key="id" bindtap="goCategory" data-id="{{item.id}}">
+    <view class="cat-header">
+      <text class="cat-icon">{{item.icon}}</text>
+      <view>
+        <view class="cat-name">{{item.name}}</view>
+        <view class="cat-desc">{{item.desc}}</view>
+      </view>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+
+  <!-- 刷题模式 -->
+  <view class="section-title">刷题工具</view>
+  <view class="mode-grid">
+    <view class="mode-item card" wx:for="{{modes}}" wx:key="id" bindtap="goMode" data-mode="{{item.id}}">
+      <view class="mode-icon">{{item.icon}}</view>
+      <view class="mode-name">{{item.name}}</view>
+      <view class="mode-desc">{{item.desc}}</view>
+      <view class="mode-badge" wx:if="{{item.id === 'wrong' && wrongCount > 0}}">{{wrongCount}}</view>
+      <view class="mode-badge" wx:if="{{item.id === 'favorite' && favoriteCount > 0}}">{{favoriteCount}}</view>
+      <view class="mode-badge" wx:if="{{item.id === 'records' && recordCount > 0}}">{{recordCount}}</view>
+    </view>
+  </view>
+</view>
+
+<tab-bar active="quiz" />

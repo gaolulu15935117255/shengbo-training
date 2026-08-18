@@ -1,4 +1,6 @@
 const { categories, getCoursesByCategory } = require("../../data/courses")
+const { hasCourseAccess } = require("../../utils/permission")
+const { formatPrice } = require("../../utils/util")
 
 Page({
   data: {
@@ -9,24 +11,29 @@ Page({
 
   onLoad(options) {
     const category = options.category || "all"
-    this.setData({
-      activeCategory: category,
-      list: getCoursesByCategory(category)
-    })
+    this.loadList(category)
   },
 
-  switchCategory(event) {
-    const id = event.currentTarget.dataset.id
-    this.setData({
-      activeCategory: id,
-      list: getCoursesByCategory(id)
-    })
+  loadList(category) {
+    const list = getCoursesByCategory(category).map((item) => ({
+      ...item,
+      priceText: formatPrice(item.price),
+      locked: !hasCourseAccess(item)
+    }))
+    this.setData({ activeCategory: category, list })
   },
 
-  goDetail(event) {
-    const id = event.currentTarget.dataset.id
+  onShow() {
+    this.loadList(this.data.activeCategory)
+  },
+
+  switchCategory(e) {
+    this.loadList(e.currentTarget.dataset.id)
+  },
+
+  goDetail(e) {
     wx.navigateTo({
-      url: `/pages/course-detail/course-detail?id=${id}`
+      url: `/pages/course-detail/course-detail?id=${e.currentTarget.dataset.id}`
     })
   }
 })

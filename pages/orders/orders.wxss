@@ -1,0 +1,45 @@
+.order-item {
+  margin-bottom: 16rpx;
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.order-no {
+  font-size: 24rpx;
+  color: #8c8176;
+}
+
+.order-status {
+  font-size: 26rpx;
+  color: #ff9800;
+}
+
+.status-paid {
+  color: #4caf50;
+}
+
+.order-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.order-bottom {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12rpx;
+}
+
+.order-price {
+  color: #b85c38;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.order-time {
+  font-size: 24rpx;
+  color: #8c8176;
+}

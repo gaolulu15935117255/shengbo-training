@@ -1,0 +1,88 @@
+.chips {
+  white-space: nowrap;
+  margin-bottom: 24rpx;
+}
+
+.chip {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  margin-right: 12rpx;
+  border-radius: 999rpx;
+  background: #ffffff;
+  color: #6d6258;
+  font-size: 26rpx;
+}
+
+.chip-active {
+  background: #b85c38;
+  color: #ffffff;
+}
+
+.product-card {
+  margin-bottom: 16rpx;
+}
+
+.product-row {
+  display: flex;
+}
+
+.product-cover {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 40rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.product-info {
+  flex: 1;
+  margin-left: 20rpx;
+}
+
+.product-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.product-desc {
+  font-size: 24rpx;
+  color: #8c8176;
+  margin: 8rpx 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-bottom {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.price-row {
+  flex: 1;
+}
+
+.price {
+  color: #b85c38;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.original {
+  color: #cbbfb4;
+  font-size: 24rpx;
+  text-decoration: line-through;
+  margin-left: 8rpx;
+}
+
+.sales {
+  font-size: 22rpx;
+  color: #8c8176;
+}

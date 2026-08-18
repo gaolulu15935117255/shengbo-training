@@ -1,0 +1,14 @@
+<view class="container">
+  <view wx:if="{{records.length === 0}}" class="empty">暂无答题记录</view>
+  <view class="card record-item" wx:for="{{records}}" wx:key="id">
+    <view class="record-header">
+      <text class="record-mode">{{item.modeLabel}}</text>
+      <text class="record-score">{{item.score}}分</text>
+    </view>
+    <view class="record-detail">
+      答对 {{item.correct}}/{{item.total}} 题
+      <text wx:if="{{item.durationText}}"> · {{item.durationText}}</text>
+    </view>
+    <view class="record-time">{{item.timeText}}</view>
+  </view>
+</view>

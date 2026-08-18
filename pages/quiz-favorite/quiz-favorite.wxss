@@ -1,0 +1,14 @@
+.fav-item {
+  margin-bottom: 16rpx;
+}
+
+.fav-stem {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.fav-meta {
+  font-size: 24rpx;
+  color: #8c8176;
+  margin-top: 8rpx;
+}

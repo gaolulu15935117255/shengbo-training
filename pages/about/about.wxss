@@ -1,0 +1,44 @@
+.brand-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #b85c38;
+}
+
+.brand-slogan {
+  font-size: 26rpx;
+  color: #8c8176;
+  margin: 8rpx 0 16rpx;
+}
+
+.intro {
+  font-size: 28rpx;
+  color: #6d6258;
+  line-height: 1.7;
+}
+
+.honor-item {
+  padding: 12rpx 0;
+  font-size: 28rpx;
+}
+
+.contact-row {
+  padding: 16rpx 0;
+  font-size: 28rpx;
+  color: #6d6258;
+  border-bottom: 1rpx solid #f0ebe4;
+}
+
+.contact-row:last-child {
+  border-bottom: none;
+}
+
+.legal {
+  font-size: 28rpx;
+}
+
+.legal-desc {
+  font-size: 24rpx;
+  color: #8c8176;
+  margin-top: 12rpx;
+  line-height: 1.6;
+}

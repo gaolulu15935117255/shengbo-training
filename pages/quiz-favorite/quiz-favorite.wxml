@@ -1,0 +1,8 @@
+<view class="container">
+  <view wx:if="{{list.length === 0}}" class="empty">还没有收藏题目</view>
+  <view class="card fav-item" wx:for="{{list}}" wx:key="id">
+    <view class="fav-stem">{{item.stem}}</view>
+    <view class="fav-meta">{{item.knowledge}}</view>
+  </view>
+  <view class="btn-primary" wx:if="{{list.length > 0}}" bindtap="startPractice">练习收藏题</view>
+</view>

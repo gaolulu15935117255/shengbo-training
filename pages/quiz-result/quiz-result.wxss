@@ -1,0 +1,45 @@
+.result-card {
+  text-align: center;
+  padding: 60rpx 28rpx;
+  margin-bottom: 40rpx;
+}
+
+.score-circle {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #b85c38, #d4895a);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24rpx;
+}
+
+.score-num {
+  font-size: 64rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-unit {
+  font-size: 24rpx;
+  opacity: 0.85;
+}
+
+.result-desc {
+  font-size: 28rpx;
+  color: #6d6258;
+}
+
+.result-level {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #b85c38;
+  margin-top: 16rpx;
+}
+
+.retry-btn {
+  margin-top: 20rpx;
+}

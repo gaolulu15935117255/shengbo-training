@@ -1,0 +1,18 @@
+.wrong-item {
+  margin-bottom: 16rpx;
+}
+
+.wrong-stem {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.wrong-meta {
+  font-size: 24rpx;
+  color: #8c8176;
+  margin-top: 8rpx;
+}
+
+.clear-btn {
+  margin-top: 20rpx;
+}

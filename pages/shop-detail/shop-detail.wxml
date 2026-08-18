@@ -1,0 +1,29 @@
+<view class="container" wx:if="{{product}}">
+  <view class="cover-banner" style="background: {{product.cover}}">
+    <view class="cover-label">{{product.type === 'membership' ? '会员套餐' : '虚拟课程'}}</view>
+  </view>
+
+  <view class="card">
+    <view class="title">{{product.title}}</view>
+    <view class="price-row">
+      <text class="price">¥{{product.price}}</text>
+      <text class="original">¥{{product.originalPrice}}</text>
+      <text class="rating">⭐ {{product.rating}}</text>
+    </view>
+    <view class="target">适用人群：{{product.target}}</view>
+    <view class="desc">{{product.desc}}</view>
+  </view>
+
+  <view class="section-title">权益介绍</view>
+  <view class="card">
+    <view class="benefit-item" wx:for="{{product.benefits}}" wx:key="*this">
+      <text class="benefit-icon">✓</text>
+      <text>{{item}}</text>
+    </view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="btn-primary buy-btn" wx:if="{{!purchased}}" bindtap="buyNow">立即购买 ¥{{product.price}}</view>
+    <view class="btn-primary buy-btn" wx:else bindtap="goLearn">已购买 · 去学习</view>
+  </view>
+</view>

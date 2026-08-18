@@ -1,0 +1,24 @@
+<view class="container">
+  <view class="card">
+    <view class="brand-name">{{brandInfo.name}}</view>
+    <view class="brand-slogan">{{brandInfo.slogan}}</view>
+    <view class="intro">{{brandInfo.intro}}</view>
+  </view>
+
+  <view class="section-title">荣誉资质</view>
+  <view class="card">
+    <view class="honor-item" wx:for="{{honors}}" wx:key="*this">🏆 {{item}}</view>
+  </view>
+
+  <view class="section-title">联系方式</view>
+  <view class="card">
+    <view class="contact-row" bindtap="callPhone">📞 {{contact.phone}}</view>
+    <view class="contact-row" bindtap="openLocation">📍 {{contact.address}}</view>
+  </view>
+
+  <view class="section-title">法律信息</view>
+  <view class="card legal">
+    <view>用户协议 · 隐私政策</view>
+    <view class="legal-desc">使用本小程序即表示您同意我们的用户协议和隐私政策。我们重视您的个人信息保护。</view>
+  </view>
+</view>

@@ -1,0 +1,27 @@
+.msg-item {
+  margin-bottom: 16rpx;
+}
+
+.msg-item.unread {
+  border-left: 6rpx solid #b85c38;
+}
+
+.msg-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.msg-content {
+  font-size: 26rpx;
+  color: #6d6258;
+  margin: 8rpx 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.msg-time {
+  font-size: 24rpx;
+  color: #8c8176;
+}

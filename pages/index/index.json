@@ -1,6 +1,6 @@
 {
+  "navigationBarTitleText": "圣博培训",
   "usingComponents": {
     "tab-bar": "/components/tab-bar/tab-bar"
-  },
-  "navigationBarTitleText": "圣博培训"
+  }
 }

@@ -1,38 +1,95 @@
 <view class="container">
-  <view class="hero">
-    <view class="hero-kicker">职业技能培训</view>
-    <view class="hero-title">{{heroTitle}}</view>
-    <view class="hero-desc">{{heroDesc}}</view>
-    <view class="hero-btn" bindtap="goCourses" data-category="all">开始学习</view>
-  </view>
+  <!-- Banner 轮播 -->
+  <swiper class="banner-swiper" indicator-dots autoplay circular interval="4000">
+    <swiper-item wx:for="{{banners}}" wx:key="id">
+      <view class="banner-item" style="background: {{item.bg}}" bindtap="onBannerTap" data-link="{{item.link}}">
+        <view class="banner-title">{{item.title}}</view>
+        <view class="banner-sub">{{item.subtitle}}</view>
+      </view>
+    </swiper-item>
+  </swiper>
 
-  <view class="section-title">岗位方向</view>
-  <view class="grid">
-    <view
-      class="card grid-item"
-      wx:for="{{categories}}"
-      wx:key="id"
-      bindtap="goCourses"
-      data-category="{{item.id}}"
-    >
-      <view class="grid-name">{{item.name}}</view>
-      <view class="grid-hint">查看课程</view>
+  <!-- 学员数据 -->
+  <view class="stats-row">
+    <view class="stat-item" wx:for="{{stats}}" wx:key="label">
+      <view class="stat-value">{{item.value}}</view>
+      <view class="stat-label">{{item.label}}</view>
     </view>
   </view>
 
-  <view class="section-title">推荐课程</view>
-  <view
-    class="card course-row"
-    wx:for="{{featured}}"
-    wx:key="id"
-    bindtap="goDetail"
-    data-id="{{item.id}}"
-  >
+  <!-- 公告滚动 -->
+  <view class="notice-bar card" wx:if="{{announcements.length}}">
+    <text class="notice-icon">📢</text>
+    <swiper class="notice-swiper" vertical autoplay circular interval="3000">
+      <swiper-item wx:for="{{announcements}}" wx:key="id">
+        <view class="notice-text" bindtap="goAnnouncement" data-id="{{item.id}}">{{item.title}}</view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 培训品类 -->
+  <view class="section-title">培训品类</view>
+  <view class="grid">
+    <view class="card grid-item category-card" wx:for="{{categories}}" wx:key="id" bindtap="goQuiz" data-category="{{item.id}}">
+      <view class="category-icon">{{item.icon}}</view>
+      <view class="grid-name">{{item.name}}</view>
+      <view class="grid-hint">{{item.desc}}</view>
+    </view>
+  </view>
+
+  <!-- 品牌介绍 -->
+  <view class="section-title">关于圣博</view>
+  <view class="card brand-card">
+    <view class="brand-name">{{brandInfo.name}}</view>
+    <view class="brand-slogan">{{brandInfo.slogan}}</view>
+    <view class="brand-intro">{{brandInfo.intro}}</view>
+    <view class="highlights">
+      <view class="highlight-item" wx:for="{{brandInfo.highlights}}" wx:key="label">
+        <view class="hl-icon">{{item.icon}}</view>
+        <view class="hl-label">{{item.label}}</view>
+        <view class="hl-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 热门商品 -->
+  <view class="section-header">
+    <view class="section-title" style="margin:0">热门推荐</view>
+    <view class="section-more" bindtap="goShop">查看全部 ›</view>
+  </view>
+  <scroll-view class="hot-scroll" scroll-x>
+    <view class="hot-item card" wx:for="{{hotProducts}}" wx:key="id" bindtap="goProduct" data-id="{{item.id}}">
+      <view class="hot-cover" style="background: {{item.cover}}">{{item.type === 'membership' ? 'VIP' : '课'}}</view>
+      <view class="hot-title">{{item.title}}</view>
+      <view class="hot-price">¥{{item.price}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 推荐课程 -->
+  <view class="section-title">精品课程</view>
+  <view class="card course-row" wx:for="{{featured}}" wx:key="id" bindtap="goCourse" data-id="{{item.id}}">
     <view>
       <view class="course-title">{{item.title}}</view>
       <view class="course-meta">{{item.level}} · {{item.duration}}</view>
     </view>
     <text class="arrow">›</text>
+  </view>
+
+  <!-- 联系我们 -->
+  <view class="section-title">联系我们</view>
+  <view class="card contact-card">
+    <view class="contact-row" bindtap="callPhone">
+      <text class="contact-icon">📞</text>
+      <text>{{contact.phone}}</text>
+    </view>
+    <view class="contact-row" bindtap="copyWechat">
+      <text class="contact-icon">💬</text>
+      <text>微信咨询：{{contact.wechat}}</text>
+    </view>
+    <view class="contact-row" bindtap="openLocation">
+      <text class="contact-icon">📍</text>
+      <text>{{contact.address}}</text>
+    </view>
   </view>
 </view>
 

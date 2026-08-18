@@ -1,0 +1,103 @@
+.stats-card {
+  margin-bottom: 32rpx;
+  background: linear-gradient(135deg, #b85c38, #d4895a);
+  color: #ffffff;
+}
+
+.stats-grid {
+  display: flex;
+}
+
+.sg-item {
+  flex: 1;
+  text-align: center;
+}
+
+.sg-value {
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.sg-label {
+  font-size: 22rpx;
+  opacity: 0.85;
+  margin-top: 4rpx;
+}
+
+.category-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.cat-header {
+  display: flex;
+  align-items: center;
+}
+
+.cat-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.cat-name {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.cat-desc {
+  font-size: 24rpx;
+  color: #8c8176;
+  margin-top: 4rpx;
+}
+
+.arrow {
+  color: #cbbfb4;
+  font-size: 44rpx;
+}
+
+.mode-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.mode-item {
+  width: calc(50% - 8rpx);
+  box-sizing: border-box;
+  text-align: center;
+  padding: 28rpx 16rpx;
+  position: relative;
+}
+
+.mode-icon {
+  font-size: 40rpx;
+}
+
+.mode-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-top: 8rpx;
+}
+
+.mode-desc {
+  font-size: 22rpx;
+  color: #8c8176;
+  margin-top: 4rpx;
+}
+
+.mode-badge {
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  background: #b85c38;
+  color: #ffffff;
+  font-size: 20rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  line-height: 32rpx;
+  border-radius: 16rpx;
+  text-align: center;
+  padding: 0 8rpx;
+}

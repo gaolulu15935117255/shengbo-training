@@ -1,6 +1,6 @@
 {
+  "navigationBarTitleText": "个人中心",
   "usingComponents": {
     "tab-bar": "/components/tab-bar/tab-bar"
-  },
-  "navigationBarTitleText": "我的"
+  }
 }

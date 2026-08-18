@@ -1,0 +1,14 @@
+<view class="container">
+  <view wx:if="{{orders.length === 0}}" class="empty">暂无订单记录</view>
+  <view class="card order-item" wx:for="{{orders}}" wx:key="id">
+    <view class="order-header">
+      <text class="order-no">{{item.id}}</text>
+      <text class="order-status {{item.status === 'paid' ? 'status-paid' : ''}}">{{item.statusLabel}}</text>
+    </view>
+    <view class="order-title">{{item.productTitle}}</view>
+    <view class="order-bottom">
+      <text class="order-price">¥{{item.price}}</text>
+      <text class="order-time">{{item.timeText}}</text>
+    </view>
+  </view>
+</view>

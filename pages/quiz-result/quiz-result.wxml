@@ -1,0 +1,18 @@
+<view class="container">
+  <view class="result-card card">
+    <view class="score-circle">
+      <view class="score-num">{{score}}</view>
+      <view class="score-unit">分</view>
+    </view>
+    <view class="result-desc">
+      答对 {{correct}} / {{total}} 题
+      <text wx:if="{{durationText}}"> · 用时 {{durationText}}</text>
+    </view>
+    <view class="result-level">
+      {{score >= 90 ? '优秀！继续保持' : score >= 60 ? '及格，还需加油' : '需加强练习'}}
+    </view>
+  </view>
+
+  <view class="btn-primary" bindtap="goBack">返回题库</view>
+  <view class="btn-outline retry-btn" wx:if="{{correct < total}}" bindtap="retryWrong">查看错题</view>
+</view>

@@ -1,0 +1,81 @@
+.cover-banner {
+  height: 280rpx;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+}
+
+.cover-label {
+  color: #ffffff;
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.price-row {
+  margin: 16rpx 0;
+}
+
+.price {
+  color: #b85c38;
+  font-size: 44rpx;
+  font-weight: 700;
+}
+
+.original {
+  color: #cbbfb4;
+  font-size: 26rpx;
+  text-decoration: line-through;
+  margin-left: 12rpx;
+}
+
+.rating {
+  margin-left: 16rpx;
+  font-size: 26rpx;
+  color: #ff9800;
+}
+
+.target {
+  font-size: 26rpx;
+  color: #8c8176;
+  margin-bottom: 12rpx;
+}
+
+.desc {
+  font-size: 28rpx;
+  color: #6d6258;
+  line-height: 1.7;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+  font-size: 28rpx;
+}
+
+.benefit-icon {
+  color: #4caf50;
+  margin-right: 12rpx;
+  font-weight: 700;
+}
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #ffffff;
+  box-shadow: 0 -4rpx 16rpx rgba(61, 43, 31, 0.06);
+}
+
+.buy-btn {
+  margin: 0;
+}

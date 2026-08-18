@@ -1,0 +1,42 @@
+<view class="container" wx:if="{{current}}">
+  <view class="top-bar">
+    <text class="progress">{{progress}}</text>
+    <text class="type-tag">{{typeLabel}}</text>
+    <text class="timer" wx:if="{{mode === 'mock'}}">{{timerDisplay}}</text>
+  </view>
+
+  <view class="card question-card">
+    <view class="stem">{{current.stem}}</view>
+    <view
+      class="option {{userAnswer.indexOf(index) >= 0 ? 'option-selected' : ''}} {{submitted && current.answer.indexOf(index) >= 0 ? 'option-correct' : ''}} {{submitted && userAnswer.indexOf(index) >= 0 && current.answer.indexOf(index) < 0 ? 'option-wrong' : ''}}"
+      wx:for="{{current.options}}"
+      wx:for-item="opt"
+      wx:key="*this"
+      bindtap="selectOption"
+      data-index="{{index}}"
+    >
+      <text class="opt-label">{{optionLabels[index]}}</text>
+      <text class="opt-text">{{opt}}</text>
+    </view>
+  </view>
+
+  <view class="card analysis-card" wx:if="{{submitted}}">
+    <view class="result-tag {{isCorrect ? 'result-correct' : 'result-wrong'}}">
+      {{isCorrect ? '✓ 回答正确' : '✗ 回答错误'}}
+    </view>
+    <view class="analysis-row">
+      <text class="analysis-label">正确答案：</text>
+      <text>{{answerText}}</text>
+    </view>
+    <view class="analysis-content">{{current.analysis}}</view>
+    <view class="knowledge-tag">📌 {{current.knowledge}}</view>
+  </view>
+
+  <view class="bottom-actions">
+    <view class="fav-btn" bindtap="toggleFav">{{favorited ? '★ 已收藏' : '☆ 收藏'}}</view>
+    <view class="btn-primary action-btn" wx:if="{{!submitted}}" bindtap="submitAnswer">确认答案</view>
+    <view class="btn-primary action-btn" wx:else bindtap="nextQuestion">
+      {{currentIndex + 1 >= questions.length ? '查看结果' : '下一题'}}
+    </view>
+  </view>
+</view>

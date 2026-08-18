@@ -1,0 +1,9 @@
+<view class="container">
+  <view wx:if="{{list.length === 0}}" class="empty">暂无错题，继续加油！</view>
+  <view class="card wrong-item" wx:for="{{list}}" wx:key="id">
+    <view class="wrong-stem">{{item.stem}}</view>
+    <view class="wrong-meta">{{item.knowledge}}</view>
+  </view>
+  <view class="btn-primary" wx:if="{{list.length > 0}}" bindtap="startPractice">开始错题练习</view>
+  <view class="btn-outline clear-btn" wx:if="{{list.length > 0}}" bindtap="clearAll">清空错题本</view>
+</view>

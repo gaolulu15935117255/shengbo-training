@@ -1,0 +1,32 @@
+.record-item {
+  margin-bottom: 16rpx;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.record-mode {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.record-score {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #b85c38;
+}
+
+.record-detail {
+  font-size: 26rpx;
+  color: #6d6258;
+  margin-top: 8rpx;
+}
+
+.record-time {
+  font-size: 24rpx;
+  color: #8c8176;
+  margin-top: 4rpx;
+}

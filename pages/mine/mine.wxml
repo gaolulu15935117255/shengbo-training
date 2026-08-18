@@ -1,20 +1,66 @@
 <view class="container">
+  <!-- 用户信息 -->
   <view class="card profile">
-    <view class="name">圣博学员</view>
-    <view class="summary">{{summary}}</view>
+    <view wx:if="{{isLoggedIn}}" class="profile-row">
+      <view class="avatar">{{userInfo.nickName[0]}}</view>
+      <view>
+        <view class="name">{{userInfo.nickName}}</view>
+        <view class="member-tag">{{membershipLabel}}</view>
+        <view class="expire" wx:if="{{membershipExpire}}">{{membershipExpire}}</view>
+      </view>
+    </view>
+    <view wx:else class="login-area" bindtap="onLogin">
+      <view class="name">点击登录</view>
+      <view class="summary">微信一键授权登录</view>
+    </view>
+    <view class="upgrade-btn" bindtap="goShop" wx:if="{{membershipLabel === '普通用户'}}">开通会员 ›</view>
   </view>
 
-  <view class="section-title">我的课程</view>
-  <view wx:if="{{learnedCourses.length === 0}}" class="empty">还没有开始学习，去首页看看课程吧</view>
-  <view
-    class="card course-row"
-    wx:for="{{learnedCourses}}"
-    wx:key="id"
-    bindtap="goDetail"
-    data-id="{{item.id}}"
-  >
-    <view class="course-title">{{item.title}}</view>
-    <view class="course-meta">{{item.level}} · {{item.duration}}</view>
+  <!-- 学习数据 -->
+  <view class="card stats-card">
+    <view class="stats-row">
+      <view class="stat-item">
+        <view class="stat-num">{{stats.totalAnswered || 0}}</view>
+        <view class="stat-label">刷题量</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-num">{{accuracy}}%</view>
+        <view class="stat-label">正确率</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-num">{{stats.studyDays || 1}}</view>
+        <view class="stat-label">学习天</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-num">{{wrongCount}}</view>
+        <view class="stat-label">错题</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 我的课程 -->
+  <view class="section-header">
+    <view class="section-title" style="margin:0">我的课程</view>
+    <view class="section-more">{{summary}}</view>
+  </view>
+  <view wx:if="{{learnedCourses.length === 0}}" class="empty card">还没有开始学习，去首页看看课程吧</view>
+  <view class="card course-row" wx:for="{{learnedCourses}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view>
+      <view class="course-title">{{item.title}}</view>
+      <view class="course-meta">{{item.level}} · {{item.duration}}</view>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="section-title">更多功能</view>
+  <view class="card menu-card">
+    <view class="menu-item" wx:for="{{menuItems}}" wx:key="title" bindtap="goMenu" data-url="{{item.url}}">
+      <text class="menu-icon">{{item.icon}}</text>
+      <text class="menu-title">{{item.title}}</text>
+      <view class="menu-badge" wx:if="{{item.title === '消息通知' && unreadCount > 0}}">{{unreadCount}}</view>
+      <text class="arrow">›</text>
+    </view>
   </view>
 </view>
 

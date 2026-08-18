@@ -22,6 +22,16 @@
   margin-bottom: 16rpx;
 }
 
+.course-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.locked-card {
+  opacity: 0.85;
+}
+
 .course-title {
   font-size: 32rpx;
   font-weight: 600;

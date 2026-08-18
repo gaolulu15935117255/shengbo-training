@@ -1,9 +1,22 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/quiz/quiz",
+    "pages/quiz-category/quiz-category",
+    "pages/quiz-practice/quiz-practice",
+    "pages/quiz-result/quiz-result",
+    "pages/quiz-wrong/quiz-wrong",
+    "pages/quiz-favorite/quiz-favorite",
+    "pages/quiz-records/quiz-records",
+    "pages/shop/shop",
+    "pages/shop-detail/shop-detail",
+    "pages/orders/orders",
     "pages/courses/courses",
     "pages/course-detail/course-detail",
-    "pages/mine/mine"
+    "pages/mine/mine",
+    "pages/about/about",
+    "pages/messages/messages",
+    "pages/announcement/announcement"
   ],
   "window": {
     "navigationBarTitleText": "圣博培训",

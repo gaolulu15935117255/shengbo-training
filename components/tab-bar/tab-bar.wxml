@@ -3,9 +3,13 @@
     <text class="tab-icon">⌂</text>
     <text>首页</text>
   </view>
-  <view class="tab-item {{active === 'courses' ? 'active' : ''}}" bindtap="goCourses">
-    <text class="tab-icon">☰</text>
-    <text>课程</text>
+  <view class="tab-item {{active === 'quiz' ? 'active' : ''}}" bindtap="goQuiz">
+    <text class="tab-icon">✎</text>
+    <text>题库</text>
+  </view>
+  <view class="tab-item {{active === 'shop' ? 'active' : ''}}" bindtap="goShop">
+    <text class="tab-icon">🛒</text>
+    <text>商城</text>
   </view>
   <view class="tab-item {{active === 'mine' ? 'active' : ''}}" bindtap="goMine">
     <text class="tab-icon">◉</text>

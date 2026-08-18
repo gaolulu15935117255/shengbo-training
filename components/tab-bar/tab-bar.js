@@ -10,9 +10,13 @@ Component({
       if (this.data.active === "index") return
       wx.reLaunch({ url: "/pages/index/index" })
     },
-    goCourses() {
-      if (this.data.active === "courses") return
-      wx.reLaunch({ url: "/pages/courses/courses" })
+    goQuiz() {
+      if (this.data.active === "quiz") return
+      wx.reLaunch({ url: "/pages/quiz/quiz" })
+    },
+    goShop() {
+      if (this.data.active === "shop") return
+      wx.reLaunch({ url: "/pages/shop/shop" })
     },
     goMine() {
       if (this.data.active === "mine") return

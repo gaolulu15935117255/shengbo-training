@@ -1,42 +1,77 @@
-.hero {
-  background: linear-gradient(135deg, #b85c38, #d4895a);
-  color: #ffffff;
+.banner-swiper {
+  height: 320rpx;
   border-radius: 28rpx;
+  overflow: hidden;
+  margin-bottom: 24rpx;
+}
+
+.banner-item {
+  height: 100%;
   padding: 48rpx 36rpx;
-  margin-bottom: 40rpx;
+  color: #ffffff;
+  box-sizing: border-box;
 }
 
-.hero-kicker {
-  font-size: 24rpx;
-  opacity: 0.85;
-}
-
-.hero-title {
-  font-size: 52rpx;
+.banner-title {
+  font-size: 40rpx;
   font-weight: 700;
-  margin: 12rpx 0 8rpx;
 }
 
-.hero-desc {
-  font-size: 28rpx;
-  opacity: 0.92;
+.banner-sub {
+  font-size: 26rpx;
+  opacity: 0.9;
+  margin-top: 12rpx;
 }
 
-.hero-btn {
-  margin-top: 32rpx;
-  display: inline-block;
+.stats-row {
+  display: flex;
   background: #ffffff;
-  color: #b85c38;
-  border-radius: 999rpx;
-  padding: 14rpx 40rpx;
-  font-size: 28rpx;
-  font-weight: 600;
+  border-radius: 24rpx;
+  padding: 28rpx 0;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(61, 43, 31, 0.06);
 }
 
-.section-title {
-  font-size: 32rpx;
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 36rpx;
   font-weight: 700;
-  margin: 8rpx 0 20rpx;
+  color: #b85c38;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #8c8176;
+  margin-top: 4rpx;
+}
+
+.notice-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.notice-icon {
+  margin-right: 12rpx;
+  font-size: 28rpx;
+}
+
+.notice-swiper {
+  flex: 1;
+  height: 40rpx;
+}
+
+.notice-text {
+  font-size: 26rpx;
+  color: #6d6258;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .grid {
@@ -51,6 +86,16 @@
   box-sizing: border-box;
 }
 
+.category-card {
+  text-align: center;
+  padding: 32rpx 20rpx;
+}
+
+.category-icon {
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
+}
+
 .grid-name {
   font-size: 30rpx;
   font-weight: 600;
@@ -58,7 +103,99 @@
 
 .grid-hint {
   color: #8c8176;
-  font-size: 24rpx;
+  font-size: 22rpx;
+  margin-top: 8rpx;
+}
+
+.brand-card {
+  margin-bottom: 36rpx;
+}
+
+.brand-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #b85c38;
+}
+
+.brand-slogan {
+  font-size: 26rpx;
+  color: #8c8176;
+  margin: 8rpx 0 16rpx;
+}
+
+.brand-intro {
+  font-size: 26rpx;
+  color: #6d6258;
+  line-height: 1.7;
+}
+
+.highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.highlight-item {
+  width: calc(50% - 8rpx);
+  text-align: center;
+  background: #faf7f3;
+  border-radius: 16rpx;
+  padding: 20rpx 12rpx;
+  box-sizing: border-box;
+}
+
+.hl-icon {
+  font-size: 32rpx;
+  color: #b85c38;
+  font-weight: 700;
+}
+
+.hl-label {
+  font-size: 26rpx;
+  font-weight: 600;
+  margin-top: 4rpx;
+}
+
+.hl-desc {
+  font-size: 22rpx;
+  color: #8c8176;
+}
+
+.hot-scroll {
+  white-space: nowrap;
+  margin-bottom: 36rpx;
+}
+
+.hot-item {
+  display: inline-block;
+  width: 260rpx;
+  margin-right: 16rpx;
+  vertical-align: top;
+}
+
+.hot-cover {
+  height: 120rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 12rpx;
+}
+
+.hot-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  white-space: normal;
+}
+
+.hot-price {
+  color: #b85c38;
+  font-size: 28rpx;
+  font-weight: 700;
   margin-top: 8rpx;
 }
 
@@ -83,4 +220,26 @@
 .arrow {
   color: #cbbfb4;
   font-size: 44rpx;
+}
+
+.contact-card {
+  margin-bottom: 24rpx;
+}
+
+.contact-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0ebe4;
+  font-size: 26rpx;
+  color: #6d6258;
+}
+
+.contact-row:last-child {
+  border-bottom: none;
+}
+
+.contact-icon {
+  margin-right: 12rpx;
+  font-size: 28rpx;
 }

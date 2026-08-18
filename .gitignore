@@ -6,3 +6,5 @@ project.private.config.json
 *.log
 .idea/
 .vscode/
+_prd_extract/
+_prd.zip

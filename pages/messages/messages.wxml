@@ -1,0 +1,14 @@
+<view class="container">
+  <view wx:if="{{messages.length === 0}}" class="empty">暂无消息</view>
+  <view
+    class="card msg-item {{item.read ? '' : 'unread'}}"
+    wx:for="{{messages}}"
+    wx:key="id"
+    bindtap="readMessage"
+    data-id="{{item.id}}"
+  >
+    <view class="msg-title">{{item.title}}</view>
+    <view class="msg-content">{{item.content}}</view>
+    <view class="msg-time">{{item.time}}</view>
+  </view>
+</view>
