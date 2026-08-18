@@ -1,0 +1,39 @@
+<view class="container">
+  <view class="hero">
+    <view class="hero-kicker">职业技能培训</view>
+    <view class="hero-title">{{heroTitle}}</view>
+    <view class="hero-desc">{{heroDesc}}</view>
+    <view class="hero-btn" bindtap="goCourses" data-category="all">开始学习</view>
+  </view>
+
+  <view class="section-title">岗位方向</view>
+  <view class="grid">
+    <view
+      class="card grid-item"
+      wx:for="{{categories}}"
+      wx:key="id"
+      bindtap="goCourses"
+      data-category="{{item.id}}"
+    >
+      <view class="grid-name">{{item.name}}</view>
+      <view class="grid-hint">查看课程</view>
+    </view>
+  </view>
+
+  <view class="section-title">推荐课程</view>
+  <view
+    class="card course-row"
+    wx:for="{{featured}}"
+    wx:key="id"
+    bindtap="goDetail"
+    data-id="{{item.id}}"
+  >
+    <view>
+      <view class="course-title">{{item.title}}</view>
+      <view class="course-meta">{{item.level}} · {{item.duration}}</view>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+</view>
+
+<tab-bar active="index" />

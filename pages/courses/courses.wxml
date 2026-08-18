@@ -1,0 +1,29 @@
+<view class="container">
+  <scroll-view class="chips" scroll-x>
+    <view
+      class="chip {{activeCategory === item.id ? 'chip-active' : ''}}"
+      wx:for="{{categories}}"
+      wx:key="id"
+      bindtap="switchCategory"
+      data-id="{{item.id}}"
+    >
+      {{item.name}}
+    </view>
+  </scroll-view>
+
+  <view
+    class="card course-card"
+    wx:for="{{list}}"
+    wx:key="id"
+    bindtap="goDetail"
+    data-id="{{item.id}}"
+  >
+    <view class="course-title">{{item.title}}</view>
+    <view class="course-desc">{{item.desc}}</view>
+    <view class="course-meta">{{item.level}} · {{item.duration}}</view>
+  </view>
+
+  <view wx:if="{{list.length === 0}}" class="empty">该分类暂无课程</view>
+</view>
+
+<tab-bar active="courses" />

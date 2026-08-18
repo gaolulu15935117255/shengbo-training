@@ -1,0 +1,14 @@
+<view class="tab-bar">
+  <view class="tab-item {{active === 'index' ? 'active' : ''}}" bindtap="goIndex">
+    <text class="tab-icon">⌂</text>
+    <text>首页</text>
+  </view>
+  <view class="tab-item {{active === 'courses' ? 'active' : ''}}" bindtap="goCourses">
+    <text class="tab-icon">☰</text>
+    <text>课程</text>
+  </view>
+  <view class="tab-item {{active === 'mine' ? 'active' : ''}}" bindtap="goMine">
+    <text class="tab-icon">◉</text>
+    <text>我的</text>
+  </view>
+</view>

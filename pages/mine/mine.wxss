@@ -1,0 +1,41 @@
+.profile {
+  background: linear-gradient(135deg, #b85c38, #d4895a);
+  color: #ffffff;
+  margin-bottom: 36rpx;
+}
+
+.name {
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.summary {
+  margin-top: 8rpx;
+  opacity: 0.92;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin-bottom: 16rpx;
+}
+
+.course-row {
+  margin-bottom: 16rpx;
+}
+
+.course-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.course-meta {
+  color: #8c8176;
+  font-size: 24rpx;
+  margin-top: 6rpx;
+}
+
+.empty {
+  color: #8c8176;
+  padding: 40rpx 0;
+}

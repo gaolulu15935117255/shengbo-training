@@ -1,0 +1,86 @@
+.hero {
+  background: linear-gradient(135deg, #b85c38, #d4895a);
+  color: #ffffff;
+  border-radius: 28rpx;
+  padding: 48rpx 36rpx;
+  margin-bottom: 40rpx;
+}
+
+.hero-kicker {
+  font-size: 24rpx;
+  opacity: 0.85;
+}
+
+.hero-title {
+  font-size: 52rpx;
+  font-weight: 700;
+  margin: 12rpx 0 8rpx;
+}
+
+.hero-desc {
+  font-size: 28rpx;
+  opacity: 0.92;
+}
+
+.hero-btn {
+  margin-top: 32rpx;
+  display: inline-block;
+  background: #ffffff;
+  color: #b85c38;
+  border-radius: 999rpx;
+  padding: 14rpx 40rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin: 8rpx 0 20rpx;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 36rpx;
+}
+
+.grid-item {
+  width: calc(50% - 8rpx);
+  box-sizing: border-box;
+}
+
+.grid-name {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.grid-hint {
+  color: #8c8176;
+  font-size: 24rpx;
+  margin-top: 8rpx;
+}
+
+.course-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.course-title {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.course-meta {
+  color: #8c8176;
+  font-size: 24rpx;
+  margin-top: 6rpx;
+}
+
+.arrow {
+  color: #cbbfb4;
+  font-size: 44rpx;
+}

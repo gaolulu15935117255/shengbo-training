@@ -1,0 +1,21 @@
+<view class="container">
+  <view class="card profile">
+    <view class="name">圣博学员</view>
+    <view class="summary">{{summary}}</view>
+  </view>
+
+  <view class="section-title">我的课程</view>
+  <view wx:if="{{learnedCourses.length === 0}}" class="empty">还没有开始学习，去首页看看课程吧</view>
+  <view
+    class="card course-row"
+    wx:for="{{learnedCourses}}"
+    wx:key="id"
+    bindtap="goDetail"
+    data-id="{{item.id}}"
+  >
+    <view class="course-title">{{item.title}}</view>
+    <view class="course-meta">{{item.level}} · {{item.duration}}</view>
+  </view>
+</view>
+
+<tab-bar active="mine" />

@@ -1,0 +1,19 @@
+<view class="container" wx:if="{{course}}">
+  <view class="card header">
+    <view class="title">{{course.title}}</view>
+    <view class="meta">{{course.level}} · {{course.duration}}</view>
+    <view class="desc">{{course.desc}}</view>
+  </view>
+
+  <view class="section-title">课程大纲</view>
+  <view class="card">
+    <view class="outline-item" wx:for="{{course.outline}}" wx:key="*this">
+      <text class="index">{{index + 1}}</text>
+      <text>{{item}}</text>
+    </view>
+  </view>
+
+  <view class="btn-primary action" bindtap="startLearn">
+    {{learned ? "继续学习" : "开始学习"}}
+  </view>
+</view>
