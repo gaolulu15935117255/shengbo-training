@@ -9,6 +9,6 @@
 
 .fav-meta {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
   margin-top: 8rpx;
 }

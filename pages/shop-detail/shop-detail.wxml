@@ -1,5 +1,5 @@
 <view class="container" wx:if="{{product}}">
-  <view class="cover-banner" style="background: {{product.cover}}">
+  <view class="cover-banner cover-{{product.type}}">
     <view class="cover-label">{{product.type === 'membership' ? '会员套餐' : '虚拟课程'}}</view>
   </view>
 

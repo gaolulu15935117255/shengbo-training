@@ -1,6 +1,6 @@
-<view class="container">
+<view class="quiz-page">
   <!-- 学习数据 -->
-  <view class="card stats-card">
+  <view class="stats-card">
     <view class="stats-grid">
       <view class="sg-item">
         <view class="sg-value">{{stats.totalAnswered || 0}}</view>
@@ -21,29 +21,66 @@
     </view>
   </view>
 
-  <!-- 题库分类 -->
-  <view class="section-title">题库分类</view>
-  <view class="card category-card" wx:for="{{categories}}" wx:key="id" bindtap="goCategory" data-id="{{item.id}}">
-    <view class="cat-header">
-      <text class="cat-icon">{{item.icon}}</text>
-      <view>
-        <view class="cat-name">{{item.name}}</view>
-        <view class="cat-desc">{{item.desc}}</view>
+  <!-- 主体：分类 + 工具撑满剩余高度 -->
+  <view class="quiz-main">
+    <!-- 题库分类 -->
+    <view class="section-block">
+      <view class="section-header">
+        <view class="section-title">题库分类</view>
+        <view class="section-sub">章节练习 · 专项刷题 · 模拟考试</view>
+      </view>
+      <view class="category-list">
+        <view
+          class="category-card"
+          wx:for="{{categories}}"
+          wx:key="id"
+          bindtap="goCategory"
+          data-id="{{item.id}}"
+        >
+          <view class="cat-accent cat-accent-{{item.id}}"></view>
+          <view class="cat-body">
+            <view class="cat-top">
+              <text class="cat-icon">{{item.icon}}</text>
+              <view class="cat-info">
+                <view class="cat-name">{{item.name}}</view>
+                <view class="cat-desc">{{item.desc}}</view>
+              </view>
+              <text class="arrow">›</text>
+            </view>
+            <view class="cat-tags">
+              <text class="cat-tag">章节练习</text>
+              <text class="cat-tag">专项刷题</text>
+              <text class="cat-tag">模拟考试</text>
+            </view>
+          </view>
+        </view>
       </view>
     </view>
-    <text class="arrow">›</text>
-  </view>
 
-  <!-- 刷题模式 -->
-  <view class="section-title">刷题工具</view>
-  <view class="mode-grid">
-    <view class="mode-item card" wx:for="{{modes}}" wx:key="id" bindtap="goMode" data-mode="{{item.id}}">
-      <view class="mode-icon">{{item.icon}}</view>
-      <view class="mode-name">{{item.name}}</view>
-      <view class="mode-desc">{{item.desc}}</view>
-      <view class="mode-badge" wx:if="{{item.id === 'wrong' && wrongCount > 0}}">{{wrongCount}}</view>
-      <view class="mode-badge" wx:if="{{item.id === 'favorite' && favoriteCount > 0}}">{{favoriteCount}}</view>
-      <view class="mode-badge" wx:if="{{item.id === 'records' && recordCount > 0}}">{{recordCount}}</view>
+    <!-- 学习工具 -->
+    <view class="section-block tools-block">
+      <view class="section-header">
+        <view class="section-title">学习工具</view>
+        <view class="section-sub">错题 · 收藏 · 记录</view>
+      </view>
+      <view class="tools-row">
+        <view
+          class="tool-item"
+          wx:for="{{modes}}"
+          wx:key="id"
+          bindtap="goMode"
+          data-mode="{{item.id}}"
+        >
+          <view class="tool-icon-wrap">
+            <text class="tool-icon">{{item.icon}}</text>
+            <view class="tool-badge" wx:if="{{item.id === 'wrong' && wrongCount > 0}}">{{wrongCount}}</view>
+            <view class="tool-badge" wx:if="{{item.id === 'favorite' && favoriteCount > 0}}">{{favoriteCount}}</view>
+            <view class="tool-badge" wx:if="{{item.id === 'records' && recordCount > 0}}">{{recordCount}}</view>
+          </view>
+          <view class="tool-name">{{item.name}}</view>
+          <view class="tool-desc">{{item.desc}}</view>
+        </view>
+      </view>
     </view>
   </view>
 </view>

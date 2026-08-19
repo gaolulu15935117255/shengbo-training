@@ -5,17 +5,39 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 24rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.04);
+}
+
+.cover-course,
+.cover-exam {
+  background: linear-gradient(160deg, #f0f4fa 0%, #e8eef6 100%);
+}
+
+.cover-package {
+  background: linear-gradient(160deg, #f2f3f8 0%, #eaeaf4 100%);
+}
+
+.cover-membership {
+  background: linear-gradient(160deg, #f5f7fa 0%, #eef2f8 100%);
 }
 
 .cover-label {
-  color: #ffffff;
+  color: #5b8def;
   font-size: 40rpx;
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.cover-package .cover-label {
+  color: #6e6acd;
+}
+
+.cover-membership .cover-label {
+  color: #007aff;
 }
 
 .title {
   font-size: 36rpx;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .price-row {
@@ -23,13 +45,13 @@
 }
 
 .price {
-  color: #b85c38;
+  color: #1d1d1f;
   font-size: 44rpx;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .original {
-  color: #cbbfb4;
+  color: #c7c7cc;
   font-size: 26rpx;
   text-decoration: line-through;
   margin-left: 12rpx;
@@ -38,18 +60,18 @@
 .rating {
   margin-left: 16rpx;
   font-size: 26rpx;
-  color: #ff9800;
+  color: #ff9500;
 }
 
 .target {
   font-size: 26rpx;
-  color: #8c8176;
+  color: #86868b;
   margin-bottom: 12rpx;
 }
 
 .desc {
   font-size: 28rpx;
-  color: #6d6258;
+  color: #86868b;
   line-height: 1.7;
 }
 
@@ -61,9 +83,9 @@
 }
 
 .benefit-icon {
-  color: #4caf50;
+  color: #34c759;
   margin-right: 12rpx;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .bottom-bar {
@@ -72,8 +94,9 @@
   right: 0;
   bottom: 0;
   padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
-  background: #ffffff;
-  box-shadow: 0 -4rpx 16rpx rgba(61, 43, 31, 0.06);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  border-top: 1rpx solid #e5e5ea;
 }
 
 .buy-btn {

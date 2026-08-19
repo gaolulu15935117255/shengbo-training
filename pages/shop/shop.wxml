@@ -13,7 +13,7 @@
 
   <view class="card product-card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
     <view class="product-row">
-      <view class="product-cover" style="background: {{item.cover}}">
+      <view class="product-cover cover-{{item.type}}">
         {{item.type === 'membership' ? 'VIP' : '课'}}
       </view>
       <view class="product-info">

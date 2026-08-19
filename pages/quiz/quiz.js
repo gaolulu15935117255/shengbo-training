@@ -2,10 +2,21 @@ const { quizCategories, practiceModes } = require("../../data/questions")
 const { getQuizStats, getAccuracy } = require("../../utils/quiz")
 const { getWrongIds, getFavoriteIds, getRecords } = require("../../utils/quiz")
 
+// 无需先选题库分类的全局工具
+const GLOBAL_MODES = ["wrong", "favorite", "records"]
+const MODE_ROUTES = {
+  wrong: "/pages/quiz-wrong/quiz-wrong",
+  favorite: "/pages/quiz-favorite/quiz-favorite",
+  records: "/pages/quiz-records/quiz-records"
+}
+
 Page({
   data: {
-    categories: quizCategories,
-    modes: practiceModes,
+    categories: quizCategories.map((item) => ({
+      ...item,
+      modeHint: "章节练习 · 专项刷题 · 模拟考试"
+    })),
+    modes: practiceModes.filter((m) => GLOBAL_MODES.includes(m.id)),
     stats: {},
     accuracy: 0,
     wrongCount: 0,
@@ -32,15 +43,7 @@ Page({
 
   goMode(e) {
     const mode = e.currentTarget.dataset.mode
-    const routes = {
-      wrong: "/pages/quiz-wrong/quiz-wrong",
-      favorite: "/pages/quiz-favorite/quiz-favorite",
-      records: "/pages/quiz-records/quiz-records"
-    }
-    if (routes[mode]) {
-      wx.navigateTo({ url: routes[mode] })
-      return
-    }
-    wx.showToast({ title: "请先选择题库分类", icon: "none" })
+    const url = MODE_ROUTES[mode]
+    if (url) wx.navigateTo({ url })
   }
 })

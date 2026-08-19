@@ -1,16 +1,16 @@
 .title {
   font-size: 36rpx;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .date {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
   margin: 12rpx 0 24rpx;
 }
 
 .content {
   font-size: 28rpx;
-  color: #6d6258;
+  color: #86868b;
   line-height: 1.8;
 }

@@ -31,7 +31,8 @@ Page({
     mockTimer: 0,
     mockTimeLimit: 1800,
     timerDisplay: "30:00",
-    optionLabels: []
+    progressPercent: 0,
+    optionStates: []
   },
 
   timer: null,
@@ -114,7 +115,7 @@ Page({
 
   selectOption(e) {
     if (this.data.submitted) return
-    const index = e.currentTarget.dataset.index
+    const index = Number(e.currentTarget.dataset.index)
     const current = this.data.current
     let userAnswer = this.data.userAnswer.slice()
 
@@ -126,7 +127,10 @@ Page({
       userAnswer = [index]
     }
 
-    this.setData({ userAnswer })
+    this.setData({
+      userAnswer,
+      optionStates: this.buildOptionStates(current, userAnswer, false)
+    })
   },
 
   submitAnswer() {
@@ -139,7 +143,15 @@ Page({
     if (isCorrect) this.correctCount += 1
     else addWrong(this.data.current.id)
 
-    this.setData({ submitted: true, isCorrect })
+    this.setData({
+      submitted: true,
+      isCorrect,
+      optionStates: this.buildOptionStates(
+        this.data.current,
+        this.data.userAnswer,
+        true
+      )
+    })
   },
 
   nextQuestion() {
@@ -166,10 +178,36 @@ Page({
       current,
       typeLabel: getTypeLabel(current.type),
       progress: `${index + 1}/${total}`,
+      progressPercent: Math.round(((index + 1) / total) * 100),
       favorited: isFavorite(current.id),
-      optionLabels: current.options.map((_, i) => getOptionLabel(i)),
-      answerText
+      answerText,
+      optionStates: this.buildOptionStates(current, [], false)
     }
+  },
+
+  buildOptionStates(current, userAnswer, submitted) {
+    return current.options.map((text, index) => {
+      const selected = userAnswer.indexOf(index) >= 0
+      const isAnswer = current.answer.indexOf(index) >= 0
+      let optionClass = "option"
+      let labelClass = "opt-label-wrap"
+
+      if (submitted) {
+        if (isAnswer) optionClass += " option-correct"
+        else if (selected) optionClass += " option-wrong"
+      } else if (selected) {
+        optionClass += " option-selected"
+        labelClass += " opt-label-selected"
+      }
+
+      return {
+        text,
+        label: getOptionLabel(index),
+        optionClass,
+        labelClass,
+        showCheck: !submitted && selected
+      }
+    })
   },
 
   toggleFav() {

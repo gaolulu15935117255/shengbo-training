@@ -14,9 +14,15 @@
 }
 
 .header-desc {
-  color: #8c8176;
+  color: #86868b;
   font-size: 26rpx;
   margin-top: 8rpx;
+}
+
+.section-tip {
+  font-size: 24rpx;
+  color: #86868b;
+  margin: -12rpx 0 20rpx;
 }
 
 .sub-item {
@@ -37,12 +43,12 @@
 
 .sub-meta {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
   margin-top: 4rpx;
 }
 
 .sub-action {
-  color: #b85c38;
+  color: #007aff;
   font-size: 28rpx;
 }
 
@@ -68,10 +74,10 @@
 
 .mode-desc {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
 }
 
 .arrow {
-  color: #cbbfb4;
+  color: #c7c7cc;
   font-size: 40rpx;
 }

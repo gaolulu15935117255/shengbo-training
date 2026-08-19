@@ -8,8 +8,8 @@
   width: 200rpx;
   height: 200rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #b85c38, #d4895a);
-  color: #ffffff;
+  background: #e8f2ff;
+  color: #007aff;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,24 +19,24 @@
 
 .score-num {
   font-size: 64rpx;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
 }
 
 .score-unit {
   font-size: 24rpx;
-  opacity: 0.85;
+  color: #86868b;
 }
 
 .result-desc {
   font-size: 28rpx;
-  color: #6d6258;
+  color: #86868b;
 }
 
 .result-level {
   font-size: 32rpx;
   font-weight: 600;
-  color: #b85c38;
+  color: #007aff;
   margin-top: 16rpx;
 }
 

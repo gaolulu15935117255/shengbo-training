@@ -15,18 +15,18 @@
 
 .record-score {
   font-size: 32rpx;
-  font-weight: 700;
-  color: #b85c38;
+  font-weight: 600;
+  color: #007aff;
 }
 
 .record-detail {
   font-size: 26rpx;
-  color: #6d6258;
+  color: #86868b;
   margin-top: 8rpx;
 }
 
 .record-time {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
   margin-top: 4rpx;
 }

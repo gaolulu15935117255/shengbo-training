@@ -14,15 +14,52 @@ function isLoggedIn() {
   return !!getUser()
 }
 
-function login(userInfo) {
-  const user = {
-    nickName: userInfo.nickName || "圣博学员",
-    avatarUrl: userInfo.avatarUrl || "",
-    loginTime: Date.now()
-  }
-  setUser(user)
-  initDefaultMessages()
-  return user
+function wxLogin() {
+  return new Promise((resolve, reject) => {
+    wx.login({
+      success(res) {
+        if (res.code) resolve(res.code)
+        else reject(new Error("微信登录失败"))
+      },
+      fail: reject
+    })
+  })
+}
+
+function getUserProfile() {
+  return new Promise((resolve, reject) => {
+    wx.getUserProfile({
+      desc: "用于展示学员昵称和头像，同步学习进度",
+      success: resolve,
+      fail: reject
+    })
+  })
+}
+
+/**
+ * 标准微信登录：wx.login 获取身份 + getUserProfile 弹出授权框
+ * 后续接后端时，将 wxCode 发给服务端换取 openid / session
+ */
+function loginWithWechat() {
+  return wxLogin()
+    .then((code) =>
+      getUserProfile().then((profileRes) => ({
+        code,
+        userInfo: profileRes.userInfo
+      }))
+    )
+    .then(({ code, userInfo }) => {
+      const user = {
+        nickName: userInfo.nickName || "微信用户",
+        avatarUrl: userInfo.avatarUrl || "",
+        gender: userInfo.gender,
+        wxCode: code,
+        loginTime: Date.now()
+      }
+      setUser(user)
+      initDefaultMessages()
+      return user
+    })
 }
 
 function logout() {
@@ -63,7 +100,7 @@ module.exports = {
   getUser,
   setUser,
   isLoggedIn,
-  login,
+  loginWithWechat,
   logout,
   initDefaultMessages
 }

@@ -1,18 +1,31 @@
 <view class="container">
   <!-- 用户信息 -->
   <view class="card profile">
-    <view wx:if="{{isLoggedIn}}" class="profile-row">
-      <view class="avatar">{{userInfo.nickName[0]}}</view>
-      <view>
+    <view wx:if="{{isLoggedIn}}" class="profile-row" bindtap="onLogout">
+      <image wx:if="{{userInfo.avatarUrl}}" class="avatar-img" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
+      <view wx:else class="avatar">{{userInfo.nickName[0]}}</view>
+      <view class="profile-info">
         <view class="name">{{userInfo.nickName}}</view>
         <view class="member-tag">{{membershipLabel}}</view>
         <view class="expire" wx:if="{{membershipExpire}}">{{membershipExpire}}</view>
+        <view class="logout-hint">点击退出登录</view>
       </view>
     </view>
-    <view wx:else class="login-area" bindtap="onLogin">
-      <view class="name">点击登录</view>
-      <view class="summary">微信一键授权登录</view>
-    </view>
+    <button
+      wx:else
+      class="login-btn"
+      bindtap="onLogin"
+      loading="{{loggingIn}}"
+      disabled="{{loggingIn}}"
+    >
+      <view class="login-inner">
+        <view class="wechat-icon">微</view>
+        <view>
+          <view class="name">微信授权登录</view>
+          <view class="summary">授权获取昵称和头像，同步学习数据</view>
+        </view>
+      </view>
+    </button>
     <view class="upgrade-btn" bindtap="goShop" wx:if="{{membershipLabel === '普通用户'}}">开通会员 ›</view>
   </view>
 

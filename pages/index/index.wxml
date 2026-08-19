@@ -1,13 +1,36 @@
 <view class="container">
   <!-- Banner 轮播 -->
-  <swiper class="banner-swiper" indicator-dots autoplay circular interval="4000">
-    <swiper-item wx:for="{{banners}}" wx:key="id">
-      <view class="banner-item" style="background: {{item.bg}}" bindtap="onBannerTap" data-link="{{item.link}}">
-        <view class="banner-title">{{item.title}}</view>
-        <view class="banner-sub">{{item.subtitle}}</view>
-      </view>
-    </swiper-item>
-  </swiper>
+  <view class="banner-section">
+    <swiper
+      class="banner-swiper"
+      indicator-dots
+      indicator-color="rgba(255,255,255,0.35)"
+      indicator-active-color="#ffffff"
+      autoplay
+      circular
+      interval="4500"
+    >
+      <swiper-item wx:for="{{banners}}" wx:key="id">
+        <view
+          class="banner-item banner-{{item.theme}}"
+          bindtap="onBannerTap"
+          data-link="{{item.link}}"
+        >
+          <view class="banner-deco banner-deco-1"></view>
+          <view class="banner-deco banner-deco-2"></view>
+          <view class="banner-content">
+            <view class="banner-tag">{{item.tag}}</view>
+            <view class="banner-title">{{item.title}}</view>
+            <view class="banner-sub">{{item.subtitle}}</view>
+            <view class="banner-action">
+              <text>了解详情</text>
+              <text class="banner-arrow">›</text>
+            </view>
+          </view>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
 
   <!-- 学员数据 -->
   <view class="stats-row">
@@ -59,7 +82,7 @@
   </view>
   <scroll-view class="hot-scroll" scroll-x>
     <view class="hot-item card" wx:for="{{hotProducts}}" wx:key="id" bindtap="goProduct" data-id="{{item.id}}">
-      <view class="hot-cover" style="background: {{item.cover}}">{{item.type === 'membership' ? 'VIP' : '课'}}</view>
+      <view class="hot-cover cover-{{item.type}}">{{item.type === 'membership' ? 'VIP' : '课'}}</view>
       <view class="hot-title">{{item.title}}</view>
       <view class="hot-price">¥{{item.price}}</view>
     </view>

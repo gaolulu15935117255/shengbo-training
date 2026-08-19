@@ -20,9 +20,9 @@
   ],
   "window": {
     "navigationBarTitleText": "圣博培训",
-    "navigationBarBackgroundColor": "#B85C38",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#F8F4EF",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F2F2F7",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

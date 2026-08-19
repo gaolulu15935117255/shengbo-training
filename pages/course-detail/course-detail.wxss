@@ -6,18 +6,18 @@
 
 .title {
   font-size: 36rpx;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .meta {
-  color: #8c8176;
+  color: #86868b;
   font-size: 26rpx;
   margin: 12rpx 0;
 }
 
 .desc {
   font-size: 28rpx;
-  color: #6d6258;
+  color: #86868b;
   line-height: 1.7;
 }
 
@@ -31,8 +31,8 @@
 .index {
   width: 40rpx;
   height: 40rpx;
-  background: #f0e8e0;
-  color: #b85c38;
+  background: #e8f2ff;
+  color: #007aff;
   border-radius: 50%;
   text-align: center;
   line-height: 40rpx;
@@ -45,7 +45,7 @@
   display: flex;
   align-items: center;
   padding: 16rpx 0;
-  border-bottom: 1rpx solid #f0ebe4;
+  border-bottom: 1rpx solid #e5e5ea;
 }
 
 .lesson-item:last-child {
@@ -53,14 +53,14 @@
 }
 
 .lesson-icon {
-  color: #b85c38;
+  color: #007aff;
   margin-right: 16rpx;
   font-size: 24rpx;
 }
 
 .lesson-duration {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
   margin-top: 4rpx;
 }
 

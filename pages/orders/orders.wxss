@@ -10,16 +10,16 @@
 
 .order-no {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
 }
 
 .order-status {
   font-size: 26rpx;
-  color: #ff9800;
+  color: #ff9500;
 }
 
 .status-paid {
-  color: #4caf50;
+  color: #34c759;
 }
 
 .order-title {
@@ -34,12 +34,12 @@
 }
 
 .order-price {
-  color: #b85c38;
+  color: #007aff;
   font-size: 32rpx;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .order-time {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
 }

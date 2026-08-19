@@ -9,13 +9,16 @@
   margin-right: 12rpx;
   border-radius: 999rpx;
   background: #ffffff;
-  color: #6d6258;
+  color: #86868b;
   font-size: 26rpx;
+  border: 1rpx solid #e5e5ea;
 }
 
 .chip-active {
-  background: #b85c38;
-  color: #ffffff;
+  background: #e8f2ff;
+  color: #007aff;
+  border-color: #c7ddf5;
+  font-weight: 600;
 }
 
 .course-card {
@@ -38,18 +41,18 @@
 }
 
 .course-desc {
-  color: #6d6258;
+  color: #86868b;
   font-size: 26rpx;
   margin: 12rpx 0;
 }
 
 .course-meta {
-  color: #8c8176;
+  color: #86868b;
   font-size: 24rpx;
 }
 
 .empty {
   text-align: center;
-  color: #8c8176;
+  color: #86868b;
   padding: 80rpx 0;
 }

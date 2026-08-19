@@ -19,7 +19,14 @@ Page({
 
   onBannerTap(e) {
     const link = e.currentTarget.dataset.link
-    if (link) wx.navigateTo({ url: link })
+    if (!link) return
+    const tabPaths = ["/pages/index/index", "/pages/quiz/quiz", "/pages/shop/shop", "/pages/mine/mine"]
+    const path = link.split("?")[0]
+    if (tabPaths.includes(path)) {
+      wx.reLaunch({ url: link })
+    } else {
+      wx.navigateTo({ url: link })
+    }
   },
 
   goQuiz(e) {

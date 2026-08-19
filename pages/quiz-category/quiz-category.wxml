@@ -20,7 +20,8 @@
     <text class="sub-action">{{item.locked ? '🔒' : '开始 ›'}}</text>
   </view>
 
-  <view class="section-title">其他模式</view>
+  <view class="section-title">刷题模式</view>
+  <view class="section-tip">专项突破难点，模拟考试限时作答</view>
   <view class="mode-list">
     <view class="card mode-row" wx:for="{{modes}}" wx:key="id" bindtap="startMode" data-mode="{{item.id}}">
       <text class="mode-icon">{{item.icon}}</text>

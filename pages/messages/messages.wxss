@@ -3,7 +3,7 @@
 }
 
 .msg-item.unread {
-  border-left: 6rpx solid #b85c38;
+  border-left: 6rpx solid #007aff;
 }
 
 .msg-title {
@@ -13,7 +13,7 @@
 
 .msg-content {
   font-size: 26rpx;
-  color: #6d6258;
+  color: #86868b;
   margin: 8rpx 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -23,5 +23,5 @@
 
 .msg-time {
   font-size: 24rpx;
-  color: #8c8176;
+  color: #86868b;
 }

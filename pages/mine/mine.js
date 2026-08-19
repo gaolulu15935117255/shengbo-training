@@ -9,6 +9,7 @@ Page({
   data: {
     userInfo: null,
     isLoggedIn: false,
+    loggingIn: false,
     membershipLabel: "普通用户",
     membershipExpire: "",
     summary: "尚未开始学习",
@@ -51,17 +52,37 @@ Page({
   },
 
   onLogin() {
-    wx.getUserProfile({
-      desc: "用于完善学员资料",
+    if (this.data.loggingIn) return
+    this.setData({ loggingIn: true })
+    auth
+      .loginWithWechat()
+      .then(() => {
+        this.onShow()
+        wx.showToast({ title: "登录成功", icon: "success" })
+      })
+      .catch((err) => {
+        const msg = err.errMsg || ""
+        if (msg.includes("cancel") || msg.includes("deny")) {
+          wx.showToast({ title: "您取消了授权", icon: "none" })
+        } else {
+          wx.showToast({ title: "登录失败，请重试", icon: "none" })
+        }
+      })
+      .finally(() => {
+        this.setData({ loggingIn: false })
+      })
+  },
+
+  onLogout() {
+    wx.showModal({
+      title: "退出登录",
+      content: "确定要退出当前微信账号吗？",
       success: (res) => {
-        auth.login(res.userInfo)
-        this.onShow()
-        wx.showToast({ title: "登录成功", icon: "success" })
-      },
-      fail: () => {
-        auth.login({ nickName: "圣博学员" })
-        this.onShow()
-        wx.showToast({ title: "登录成功", icon: "success" })
+        if (res.confirm) {
+          auth.logout()
+          this.onShow()
+          wx.showToast({ title: "已退出", icon: "none" })
+        }
       }
     })
   },

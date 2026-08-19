@@ -3,21 +3,24 @@ const banners = [
     id: "b1",
     title: "圣博培训 · 专业家政上岗",
     subtitle: "育儿嫂 · 保姆 · 持证上岗",
-    bg: "linear-gradient(135deg, #B85C38, #D4895A)",
+    tag: "品牌推荐",
+    theme: "blue",
     link: "/pages/shop/shop"
   },
   {
     id: "b2",
     title: "春季考证班火热招生",
     subtitle: "报名即赠基础题库 · 限时优惠",
-    bg: "linear-gradient(135deg, #5C7A9E, #8BA4C4)",
+    tag: "限时活动",
+    theme: "purple",
     link: "/pages/shop/shop?type=membership"
   },
   {
     id: "b3",
     title: "智能刷题 · 高效备考",
     subtitle: "章节练习 · 模拟考试 · 错题巩固",
-    bg: "linear-gradient(135deg, #6B8E5A, #9BB88A)",
+    tag: "学习工具",
+    theme: "teal",
     link: "/pages/quiz/quiz"
   }
 ]
