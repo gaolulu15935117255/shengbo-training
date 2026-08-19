@@ -59,15 +59,39 @@ utils/                工具（权限、订单、刷题、存储）
 components/tab-bar/   底部导航
 ```
 
+## V2.0 后台管理系统（新增）
+
+基于 V2.0 文档已搭建 **Node.js API + Vue 3 管理后台**：
+
+| 目录 | 说明 |
+|------|------|
+| `backend/` | Express API，MySQL，管理员/题库/商品/订单接口 |
+| `admin/` | Vue 3 + Element Plus 管理 Web |
+
+**快速启动**（需 Node.js ≥ 18、MySQL）：
+
+```bash
+# 1. 后端
+cd backend && cp .env.example .env   # 填入数据库配置
+npm install && npm run init-db && npm run seed-questions
+npm start                            # http://localhost:3000
+
+# 2. 管理后台（开发）
+cd admin && npm install && npm run dev   # http://localhost:5173
+```
+
+默认管理员：`admin` / `admin123`
+
+详细文档：[V2.0 后台管理系统部署说明](docs/V2.0-后台管理系统部署说明.md)
+
 ## 技术说明
 
-- 当前为 **前端完整版**，数据使用本地 mock + `wx.storage` 持久化
-- 支付为 **模拟支付**，接入真实微信支付需后端配合
-- 后台管理系统（题库导入、商品管理等）需单独开发 Web 端 + API
+- 小程序当前仍为 **V1.0 前端**，数据使用本地 mock + `wx.storage`
+- **V2.0 后端 API 已就绪**，小程序对接 API 为下一步工作
+- 支付仍为模拟；真实微信支付需配置商户号并完善 notify 回调
 
 ## 后续对接
 
-1. 搭建后端 API（用户、题库、商品、订单、支付）
-2. 接入微信支付
-3. 开发后台管理系统（品牌配置、文档导入题库、商品管理）
-4. V1.1：视频课程播放、排行榜、优惠券
+1. 小程序页面对接 `backend` API（替换 data/*.js）
+2. 接入微信支付（prepay + notify）
+3. V1.1：视频课程播放、排行榜、优惠券

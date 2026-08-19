@@ -8,3 +8,13 @@ project.private.config.json
 .vscode/
 _prd_extract/
 _prd.zip
+
+# V2 后端与管理后台
+backend/.env
+admin/.env
+admin/.env.local
+backend/node_modules/
+admin/node_modules/
+admin/dist/
+backend/uploads/
+npm-debug.log*
