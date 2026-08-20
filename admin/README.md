@@ -28,7 +28,7 @@
 ### 环境要求
 
 - Node.js 18+
-- 后端 API 服务运行在 `http://localhost:3000`
+- 后端 API 服务运行在 `http://localhost:3088`
 
 ### 安装依赖
 
@@ -43,7 +43,7 @@ npm install
 npm run dev
 ```
 
-访问 http://localhost:5173 ，开发环境下 `/api` 请求会通过 Vite 代理转发至 `http://localhost:3000`。
+访问 http://localhost:5173 ，开发环境下 `/api` 请求会通过 Vite 代理转发至 `http://localhost:3088`。
 
 ### 生产构建
 
@@ -126,7 +126,7 @@ Nginx 示例：
 
 ```nginx
 location /api {
-    proxy_pass http://localhost:3000;
+    proxy_pass http://localhost:3088;
 }
 
 location / {

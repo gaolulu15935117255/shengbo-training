@@ -1,8 +1,16 @@
-const { quizCategories, practiceModes } = require("../../data/questions")
-const { getQuizStats, getAccuracy } = require("../../utils/quiz")
-const { getWrongIds, getFavoriteIds, getRecords } = require("../../utils/quiz")
+const { practiceModes } = require("../../data/questions")
+const {
+  getQuizStats,
+  getWrongIds,
+  getFavoriteIds,
+  getRecords,
+  syncWrongIds,
+  syncFavoriteIds
+} = require("../../utils/quiz")
+const { quizApi } = require("../../utils/api")
+const auth = require("../../utils/auth")
+const config = require("../../config/api")
 
-// 无需先选题库分类的全局工具
 const GLOBAL_MODES = ["wrong", "favorite", "records"]
 const MODE_ROUTES = {
   wrong: "/pages/quiz-wrong/quiz-wrong",
@@ -12,27 +20,72 @@ const MODE_ROUTES = {
 
 Page({
   data: {
-    categories: quizCategories.map((item) => ({
-      ...item,
-      modeHint: "章节练习 · 专项刷题 · 模拟考试"
-    })),
+    categories: [],
     modes: practiceModes.filter((m) => GLOBAL_MODES.includes(m.id)),
     stats: {},
     accuracy: 0,
     wrongCount: 0,
     favoriteCount: 0,
-    recordCount: 0
+    recordCount: 0,
+    loading: true
   },
 
   onShow() {
-    const stats = getQuizStats()
-    this.setData({
-      stats,
-      accuracy: getAccuracy(),
-      wrongCount: getWrongIds().length,
-      favoriteCount: getFavoriteIds().length,
-      recordCount: getRecords().length
-    })
+    this.loadData()
+  },
+
+  loadData() {
+    const applyStats = (stats) => {
+      const s = stats || getQuizStats()
+      this.setData({
+        stats: s,
+        accuracy: s.totalAnswered ? Math.round((s.totalCorrect / s.totalAnswered) * 100) : 0,
+        wrongCount: getWrongIds().length,
+        favoriteCount: getFavoriteIds().length,
+        recordCount: getRecords().length,
+        loading: false
+      })
+    }
+
+    const loadCategories = () => {
+      if (config.useApi) {
+        return quizApi.categories().then((categories) => {
+          this.setData({
+            categories: (categories || []).map((item) => ({
+              id: item.categoryCode,
+              name: item.name,
+              icon: item.icon,
+              desc: item.desc
+            }))
+          })
+        })
+      }
+      const { quizCategories } = require("../../data/questions")
+      this.setData({
+        categories: quizCategories.map((item) => ({
+          ...item,
+          modeHint: "章节练习 · 专项刷题 · 模拟考试"
+        }))
+      })
+      return Promise.resolve()
+    }
+
+    Promise.all([
+      loadCategories(),
+      syncWrongIds().catch(() => {}),
+      syncFavoriteIds().catch(() => {}),
+      config.useApi && auth.getToken()
+        ? auth.refreshProfile().then((user) => user && user.stats).catch(() => null)
+        : Promise.resolve(null)
+    ])
+      .then((results) => {
+        const profileStats = results[3]
+        applyStats(profileStats)
+      })
+      .catch(() => {
+        applyStats(getQuizStats())
+        wx.showToast({ title: "题库加载失败", icon: "none" })
+      })
   },
 
   goCategory(e) {

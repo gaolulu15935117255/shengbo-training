@@ -1,4 +1,5 @@
 const KEYS = {
+  TOKEN: "sb_token",
   USER: "sb_user",
   PURCHASED: "sb_purchased",
   MEMBERSHIP: "sb_membership",

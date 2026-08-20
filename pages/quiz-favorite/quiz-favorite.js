@@ -1,14 +1,42 @@
-const { getFavoriteIds } = require("../../utils/quiz")
-const { getQuestionById } = require("../../data/questions")
+const { syncFavoriteIds } = require("../../utils/quiz")
+const { quizApi } = require("../../utils/api")
+const config = require("../../config/api")
 
 Page({
   data: {
-    list: []
+    list: [],
+    loading: true
   },
 
   onShow() {
-    const list = getFavoriteIds().map(getQuestionById).filter(Boolean)
-    this.setData({ list })
+    this.loadList()
+  },
+
+  loadList() {
+    if (!config.useApi) {
+      const { getFavoriteIds } = require("../../utils/quiz")
+      const { getQuestionById } = require("../../data/questions")
+      const list = getFavoriteIds().map(getQuestionById).filter(Boolean)
+      this.setData({ list, loading: false })
+      return
+    }
+
+    syncFavoriteIds()
+      .then((ids) => {
+        if (!ids.length) {
+          this.setData({ list: [], loading: false })
+          return null
+        }
+        return quizApi.questionsBatch(ids, false)
+      })
+      .then((questions) => {
+        if (!questions) return
+        this.setData({ list: questions, loading: false })
+      })
+      .catch(() => {
+        this.setData({ loading: false })
+        wx.showToast({ title: "加载失败", icon: "none" })
+      })
   },
 
   startPractice() {

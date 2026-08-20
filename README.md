@@ -74,7 +74,7 @@ components/tab-bar/   底部导航
 # 1. 后端
 cd backend && cp .env.example .env   # 填入数据库配置
 npm install && npm run init-db && npm run seed-questions
-npm start                            # http://localhost:3000
+npm start                            # http://localhost:3088
 
 # 2. 管理后台（开发）
 cd admin && npm install && npm run dev   # http://localhost:5173

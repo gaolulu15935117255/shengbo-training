@@ -1,4 +1,7 @@
 const storage = require("./storage")
+const config = require("../config/api")
+const auth = require("./auth")
+const { quizApi } = require("./api")
 const { getTypeLabel } = require("../data/questions")
 
 function getWrongIds() {
@@ -112,6 +115,53 @@ function getOptionLabel(index) {
   return String.fromCharCode(65 + index)
 }
 
+function syncWrongIds() {
+  if (!config.useApi || !auth.getToken()) {
+    return Promise.resolve(getWrongIds())
+  }
+  return quizApi.wrongIds().then((data) => {
+    const ids = data.questionIds || []
+    storage.set(storage.KEYS.WRONG, ids)
+    return ids
+  })
+}
+
+function syncFavoriteIds() {
+  if (!config.useApi || !auth.getToken()) {
+    return Promise.resolve(getFavoriteIds())
+  }
+  return quizApi.favoriteIds().then((data) => {
+    const ids = data.questionIds || []
+    storage.set(storage.KEYS.FAVORITE, ids)
+    return ids
+  })
+}
+
+function clearWrongRemote() {
+  if (config.useApi && auth.getToken()) {
+    return quizApi.clearWrong().then(() => clearWrong())
+  }
+  clearWrong()
+  return Promise.resolve()
+}
+
+function toggleFavoriteRemote(questionId) {
+  if (config.useApi && auth.getToken()) {
+    return quizApi.toggleFavorite(questionId).then((data) => {
+      const ids = getFavoriteIds()
+      if (data.favorited) {
+        if (!ids.includes(questionId)) ids.push(questionId)
+      } else {
+        const index = ids.indexOf(questionId)
+        if (index >= 0) ids.splice(index, 1)
+      }
+      storage.set(storage.KEYS.FAVORITE, ids)
+      return data.favorited
+    })
+  }
+  return Promise.resolve(toggleFavorite(questionId))
+}
+
 module.exports = {
   getWrongIds,
   getFavoriteIds,
@@ -120,7 +170,11 @@ module.exports = {
   addWrong,
   removeWrong,
   clearWrong,
+  clearWrongRemote,
   toggleFavorite,
+  toggleFavoriteRemote,
+  syncWrongIds,
+  syncFavoriteIds,
   isFavorite,
   checkAnswer,
   saveRecord,

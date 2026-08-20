@@ -33,7 +33,7 @@ cp .env.example .env
 | `DB_NAME` | 库名，默认 `shengbo_training` |
 | `JWT_SECRET` | 小程序用户 JWT 密钥 |
 | `ADMIN_JWT_SECRET` | 后台管理员 JWT 密钥 |
-| `PORT` | 服务端口，默认 3000 |
+| `PORT` | 服务端口，默认 3088 |
 
 ### 3. 初始化数据库
 
@@ -63,7 +63,7 @@ npm start
 npm run dev
 ```
 
-服务默认运行在 **http://localhost:3000**
+服务默认运行在 **http://localhost:3088**
 
 健康检查：`GET /health`
 
@@ -97,7 +97,7 @@ npm run dev
 ### 管理员登录示例
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/auth/login \
+curl -X POST http://localhost:3088/api/admin/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```

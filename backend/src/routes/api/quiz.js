@@ -1,19 +1,57 @@
 const express = require('express');
 const pool = require('../../db/pool');
 const { success, fail } = require('../../utils/response');
-const { optionalUserAuth } = require('../../middleware/auth');
+const { optionalUserAuth, userAuth } = require('../../middleware/auth');
 
 const router = express.Router();
 
-async function userHasSubcategoryAccess(userId, subcategoryId) {
-  if (!userId) return false;
+const TYPE_LABELS = { single: '单选题', multiple: '多选题', judge: '判断题' };
 
+function optionLabel(index) {
+  return String.fromCharCode(65 + index);
+}
+
+function parseJsonField(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') return JSON.parse(value);
+  return value;
+}
+
+function mapQuestion(row, withAnswer = true, favorited = false) {
+  const options = parseJsonField(row.options);
+  const answer = parseJsonField(row.answer);
+  const result = {
+    id: row.id,
+    questionCode: row.question_code,
+    type: row.type,
+    typeLabel: TYPE_LABELS[row.type] || row.type,
+    stem: row.stem,
+    options,
+    knowledge: row.knowledge,
+    favorited,
+  };
+  if (withAnswer) {
+    result.answer = answer;
+    result.answerText = answer.map(optionLabel).join('、');
+    result.analysis = row.analysis;
+  }
+  return result;
+}
+
+async function getFavoriteSet(userId) {
+  if (!userId) return new Set();
+  const [rows] = await pool.query('SELECT question_id FROM user_favorites WHERE user_id = ?', [userId]);
+  return new Set(rows.map((r) => r.question_id));
+}
+
+async function userHasSubcategoryAccess(userId, subcategoryId) {
   const [subs] = await pool.query(
     'SELECT s.is_free, s.category_id, c.category_code FROM quiz_subcategories s JOIN quiz_categories c ON c.id = s.category_id WHERE s.id = ?',
     [subcategoryId]
   );
   if (!subs.length) return false;
   if (subs[0].is_free) return true;
+  if (!userId) return false;
 
   const [allEnt] = await pool.query(
     "SELECT 1 FROM user_entitlements WHERE user_id = ? AND status = 1 AND entitlement_type = 'all' AND (expire_at IS NULL OR expire_at > NOW()) LIMIT 1",
@@ -126,6 +164,183 @@ router.get('/questions/ids', optionalUserAuth, async (req, res) => {
       total: rows.length,
       hasAccess: true,
     });
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.get('/questions/batch', optionalUserAuth, async (req, res) => {
+  try {
+    const idsRaw = req.query.ids;
+    if (!idsRaw) return fail(res, 40001, 'ids 不能为空');
+
+    const ids = String(idsRaw)
+      .split(',')
+      .map((id) => parseInt(id.trim(), 10))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    if (!ids.length) return fail(res, 40001, 'ids 格式无效');
+
+    const withAnswer = req.query.withAnswer !== 'false';
+    const placeholders = ids.map(() => '?').join(',');
+    const [rows] = await pool.query(
+      `SELECT * FROM questions WHERE id IN (${placeholders}) AND status = 'published' AND deleted_at IS NULL`,
+      ids
+    );
+
+    const favoriteSet = await getFavoriteSet(req.user?.id || null);
+    const mapped = rows.map((row) => mapQuestion(row, withAnswer, favoriteSet.has(row.id)));
+    mapped.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+
+    return success(res, mapped);
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.get('/questions/:questionId', optionalUserAuth, async (req, res) => {
+  try {
+    const questionId = parseInt(req.params.questionId, 10);
+    if (!Number.isFinite(questionId)) return fail(res, 40001, 'questionId 无效');
+
+    const [rows] = await pool.query(
+      "SELECT * FROM questions WHERE id = ? AND status = 'published' AND deleted_at IS NULL",
+      [questionId]
+    );
+    if (!rows.length) return fail(res, 40400, '题目不存在');
+
+    const withAnswer = req.query.withAnswer !== 'false';
+    const favoriteSet = await getFavoriteSet(req.user?.id || null);
+    return success(res, mapQuestion(rows[0], withAnswer, favoriteSet.has(questionId)));
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.post('/questions/:questionId/submit', userAuth, async (req, res) => {
+  try {
+    const questionId = parseInt(req.params.questionId, 10);
+    const { userAnswer } = req.body || {};
+    if (!Number.isFinite(questionId)) return fail(res, 40001, 'questionId 无效');
+    if (!Array.isArray(userAnswer)) return fail(res, 40001, 'userAnswer 必须为数组');
+
+    const [rows] = await pool.query(
+      "SELECT * FROM questions WHERE id = ? AND status = 'published' AND deleted_at IS NULL",
+      [questionId]
+    );
+    if (!rows.length) return fail(res, 40400, '题目不存在');
+
+    const answer = parseJsonField(rows[0].answer);
+    const sortedCorrect = answer.slice().sort((a, b) => a - b);
+    const sortedUser = userAnswer.slice().sort((a, b) => a - b);
+    const isCorrect =
+      sortedCorrect.length === sortedUser.length &&
+      sortedCorrect.every((val, i) => val === sortedUser[i]);
+
+    const userId = req.user.id;
+
+    await pool.query(
+      'INSERT INTO quiz_answer_logs (user_id, question_id, user_answer, is_correct) VALUES (?, ?, ?, ?)',
+      [userId, questionId, JSON.stringify(userAnswer), isCorrect ? 1 : 0]
+    );
+
+    await pool.query(
+      `INSERT INTO user_stats (user_id, total_answered, total_correct, study_days, last_study_date)
+       VALUES (?, 1, ?, 1, CURDATE())
+       ON DUPLICATE KEY UPDATE
+         total_answered = total_answered + 1,
+         total_correct = total_correct + VALUES(total_correct),
+         study_days = IF(last_study_date = CURDATE(), study_days, study_days + 1),
+         last_study_date = CURDATE()`,
+      [userId, isCorrect ? 1 : 0]
+    );
+
+    if (!isCorrect) {
+      await pool.query(
+        `INSERT INTO user_wrong_questions (user_id, question_id, wrong_count, last_wrong_at)
+         VALUES (?, ?, 1, NOW())
+         ON DUPLICATE KEY UPDATE wrong_count = wrong_count + 1, last_wrong_at = NOW(), cleared_at = NULL`,
+        [userId, questionId]
+      );
+    }
+
+    return success(res, {
+      isCorrect,
+      answer,
+      answerText: answer.map(optionLabel).join('、'),
+      analysis: rows[0].analysis,
+    });
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.get('/wrong', userAuth, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT question_id FROM user_wrong_questions WHERE user_id = ? AND cleared_at IS NULL ORDER BY last_wrong_at DESC',
+      [req.user.id]
+    );
+    return success(res, { questionIds: rows.map((r) => r.question_id) });
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.delete('/wrong', userAuth, async (req, res) => {
+  try {
+    await pool.query(
+      'UPDATE user_wrong_questions SET cleared_at = NOW() WHERE user_id = ? AND cleared_at IS NULL',
+      [req.user.id]
+    );
+    return success(res, null);
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.get('/favorites', userAuth, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT question_id FROM user_favorites WHERE user_id = ? ORDER BY created_at DESC',
+      [req.user.id]
+    );
+    return success(res, { questionIds: rows.map((r) => r.question_id) });
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.post('/favorites/:questionId', userAuth, async (req, res) => {
+  try {
+    const questionId = parseInt(req.params.questionId, 10);
+    if (!Number.isFinite(questionId)) return fail(res, 40001, 'questionId 无效');
+
+    const [existing] = await pool.query(
+      'SELECT id FROM user_favorites WHERE user_id = ? AND question_id = ?',
+      [req.user.id, questionId]
+    );
+
+    if (existing.length) {
+      await pool.query('DELETE FROM user_favorites WHERE user_id = ? AND question_id = ?', [
+        req.user.id,
+        questionId,
+      ]);
+      return success(res, { favorited: false });
+    }
+
+    await pool.query('INSERT INTO user_favorites (user_id, question_id) VALUES (?, ?)', [
+      req.user.id,
+      questionId,
+    ]);
+    return success(res, { favorited: true });
   } catch (err) {
     console.error(err);
     return fail(res, 50000, '服务器内部错误', null, 500);

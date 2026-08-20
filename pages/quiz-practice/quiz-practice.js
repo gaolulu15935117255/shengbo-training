@@ -1,20 +1,19 @@
-const {
-  getQuestionsBySubcategory,
-  getQuestionsByCategory,
-  getMockExamQuestions,
-  getQuestionById,
-  getTypeLabel
-} = require("../../data/questions")
+const { getTypeLabel } = require("../../data/questions")
 const {
   checkAnswer,
   addWrong,
-  toggleFavorite,
+  toggleFavoriteRemote,
   isFavorite,
   getOptionLabel,
-  saveRecord
+  saveRecord,
+  getWrongIds,
+  getFavoriteIds,
+  syncWrongIds,
+  syncFavoriteIds
 } = require("../../utils/quiz")
-const { getWrongIds, getFavoriteIds } = require("../../utils/quiz")
-const { hasQuizAccess } = require("../../utils/permission")
+const { quizApi } = require("../../utils/api")
+const auth = require("../../utils/auth")
+const config = require("../../config/api")
 
 Page({
   data: {
@@ -32,7 +31,8 @@ Page({
     mockTimeLimit: 1800,
     timerDisplay: "30:00",
     progressPercent: 0,
-    optionStates: []
+    optionStates: [],
+    loading: true
   },
 
   timer: null,
@@ -40,6 +40,81 @@ Page({
   correctCount: 0,
 
   onLoad(options) {
+    this.options = options
+    this.loadQuestions(options)
+  },
+
+  onUnload() {
+    if (this.timer) clearInterval(this.timer)
+  },
+
+  loadQuestions(options) {
+    const { mode, subcategoryId, categoryId } = options
+
+    if (!config.useApi) {
+      this.loadLocalQuestions(options)
+      return
+    }
+
+    wx.showLoading({ title: "加载题目..." })
+
+    let idsPromise
+    if (mode === "wrong") {
+      idsPromise = syncWrongIds().then((ids) => ({ questionIds: ids }))
+    } else if (mode === "favorite") {
+      idsPromise = syncFavoriteIds().then((ids) => ({ questionIds: ids }))
+    } else {
+      const params = { mode: mode || "chapter" }
+      if (subcategoryId) params.subcategoryId = subcategoryId
+      if (categoryId) params.categoryId = categoryId
+      if (mode === "mock") params.limit = 10
+      idsPromise = quizApi.questionIds(params)
+    }
+
+    idsPromise
+      .then((data) => {
+        const ids = data.questionIds || []
+        if (!ids.length) {
+          wx.hideLoading()
+          wx.showToast({ title: "暂无可用题目", icon: "none" })
+          setTimeout(() => wx.navigateBack(), 1500)
+          return null
+        }
+        return quizApi.questionsBatch(ids, true)
+      })
+      .then((questions) => {
+        wx.hideLoading()
+        if (!questions || !questions.length) return
+        this.initPractice(mode || "chapter", questions)
+      })
+      .catch((err) => {
+        wx.hideLoading()
+        if (err.code === 40300) {
+          wx.showModal({
+            title: "需要解锁",
+            content: err.message || "该内容为付费资源",
+            confirmText: "去购买",
+            success: (res) => {
+              if (res.confirm) wx.navigateTo({ url: "/pages/shop/shop" })
+              else wx.navigateBack()
+            }
+          })
+          return
+        }
+        wx.showToast({ title: err.message || "加载失败", icon: "none" })
+        setTimeout(() => wx.navigateBack(), 1500)
+      })
+  },
+
+  loadLocalQuestions(options) {
+    const {
+      getQuestionsBySubcategory,
+      getQuestionsByCategory,
+      getMockExamQuestions,
+      getQuestionById
+    } = require("../../data/questions")
+    const { hasQuizAccess } = require("../../utils/permission")
+
     const { mode, subcategory, category } = options
     let questions = []
 
@@ -57,12 +132,16 @@ Page({
 
     questions = questions.filter((q) => hasQuizAccess(q))
 
-    if (questions.length === 0) {
+    if (!questions.length) {
       wx.showToast({ title: "暂无可用题目", icon: "none" })
       setTimeout(() => wx.navigateBack(), 1500)
       return
     }
 
+    this.initPractice(mode || "chapter", questions)
+  },
+
+  initPractice(mode, questions) {
     const titles = {
       chapter: "章节练习",
       special: "专项刷题",
@@ -71,14 +150,15 @@ Page({
       favorite: "收藏练习"
     }
 
-    const quizMode = mode || "chapter"
+    this.correctCount = 0
     this.setData({
-      mode: quizMode,
+      mode,
       questions,
       currentIndex: 0,
       userAnswer: [],
       submitted: false,
       isCorrect: false,
+      loading: false,
       ...this.buildQuestionState(questions[0], 0, questions.length)
     })
 
@@ -88,10 +168,6 @@ Page({
       this.startTime = Date.now()
       this.startMockTimer()
     }
-  },
-
-  onUnload() {
-    if (this.timer) clearInterval(this.timer)
   },
 
   startMockTimer() {
@@ -139,19 +215,33 @@ Page({
       return
     }
 
-    const isCorrect = checkAnswer(this.data.current, this.data.userAnswer)
-    if (isCorrect) this.correctCount += 1
-    else addWrong(this.data.current.id)
+    const current = this.data.current
+    const userAnswer = this.data.userAnswer
 
-    this.setData({
-      submitted: true,
-      isCorrect,
-      optionStates: this.buildOptionStates(
-        this.data.current,
-        this.data.userAnswer,
-        true
-      )
-    })
+    const applyResult = (isCorrect, answerOverride) => {
+      if (isCorrect) this.correctCount += 1
+      else addWrong(current.id)
+
+      const answer = answerOverride || current.answer
+      this.setData({
+        submitted: true,
+        isCorrect,
+        current: { ...current, answer },
+        answerText: answer.map((i) => getOptionLabel(i)).join("、"),
+        optionStates: this.buildOptionStates({ ...current, answer }, userAnswer, true)
+      })
+    }
+
+    if (config.useApi && auth.getToken()) {
+      quizApi
+        .submitAnswer(current.id, userAnswer)
+        .then((data) => applyResult(data.isCorrect, data.answer))
+        .catch(() => {
+          applyResult(checkAnswer(current, userAnswer))
+        })
+    } else {
+      applyResult(checkAnswer(current, userAnswer))
+    }
   },
 
   nextQuestion() {
@@ -173,10 +263,10 @@ Page({
   },
 
   buildQuestionState(current, index, total) {
-    const answerText = current.answer.map((i) => getOptionLabel(i)).join("、")
+    const answerText = (current.answer || []).map((i) => getOptionLabel(i)).join("、")
     return {
       current,
-      typeLabel: getTypeLabel(current.type),
+      typeLabel: current.typeLabel || getTypeLabel(current.type),
       progress: `${index + 1}/${total}`,
       progressPercent: Math.round(((index + 1) / total) * 100),
       favorited: isFavorite(current.id),
@@ -188,7 +278,7 @@ Page({
   buildOptionStates(current, userAnswer, submitted) {
     return current.options.map((text, index) => {
       const selected = userAnswer.indexOf(index) >= 0
-      const isAnswer = current.answer.indexOf(index) >= 0
+      const isAnswer = (current.answer || []).indexOf(index) >= 0
       let optionClass = "option"
       let labelClass = "opt-label-wrap"
 
@@ -211,9 +301,10 @@ Page({
   },
 
   toggleFav() {
-    const favorited = toggleFavorite(this.data.current.id)
-    this.setData({ favorited })
-    wx.showToast({ title: favorited ? "已收藏" : "已取消", icon: "none" })
+    toggleFavoriteRemote(this.data.current.id).then((favorited) => {
+      this.setData({ favorited })
+      wx.showToast({ title: favorited ? "已收藏" : "已取消", icon: "none" })
+    })
   },
 
   finishPractice() {

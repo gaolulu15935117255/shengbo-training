@@ -2,8 +2,16 @@ const { courses } = require("../../data/courses")
 const { formatLearnedCount } = require("../../utils/util")
 const auth = require("../../utils/auth")
 const permission = require("../../utils/permission")
-const { getQuizStats, getAccuracy, getWrongIds, getFavoriteIds } = require("../../utils/quiz")
+const {
+  getQuizStats,
+  getAccuracy,
+  getWrongIds,
+  getFavoriteIds,
+  syncWrongIds,
+  syncFavoriteIds
+} = require("../../utils/quiz")
 const storage = require("../../utils/storage")
+const config = require("../../config/api")
 
 Page({
   data: {
@@ -29,26 +37,39 @@ Page({
   },
 
   onShow() {
-    const userInfo = auth.getUser()
-    const learnedIds = getApp().globalData.learnedIds || []
-    const learnedCourses = courses.filter((item) => learnedIds.includes(item.id))
-    const stats = getQuizStats()
-    const messages = storage.get(storage.KEYS.MESSAGES, [])
-    const unreadCount = messages.filter((m) => !m.read).length
+    this.refreshPage()
+  },
 
-    this.setData({
-      userInfo,
-      isLoggedIn: !!userInfo,
-      membershipLabel: permission.getMembershipLabel(),
-      membershipExpire: permission.getMembershipExpireText(),
-      summary: formatLearnedCount(learnedCourses.length),
-      learnedCourses: learnedCourses.slice(0, 3),
-      stats,
-      accuracy: getAccuracy(),
-      wrongCount: getWrongIds().length,
-      favoriteCount: getFavoriteIds().length,
-      unreadCount
-    })
+  refreshPage() {
+    const applyLocal = () => {
+      const userInfo = auth.getUser()
+      const learnedIds = getApp().globalData.learnedIds || []
+      const learnedCourses = courses.filter((item) => learnedIds.includes(item.id))
+      const stats = userInfo && userInfo.stats ? userInfo.stats : getQuizStats()
+      const messages = storage.get(storage.KEYS.MESSAGES, [])
+
+      this.setData({
+        userInfo,
+        isLoggedIn: auth.isLoggedIn(),
+        membershipLabel: permission.getMembershipLabel(),
+        membershipExpire: permission.getMembershipExpireText(),
+        summary: formatLearnedCount(learnedCourses.length),
+        learnedCourses: learnedCourses.slice(0, 3),
+        stats,
+        accuracy: stats.totalAnswered
+          ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100)
+          : getAccuracy(),
+        wrongCount: getWrongIds().length,
+        favoriteCount: getFavoriteIds().length,
+        unreadCount: messages.filter((m) => !m.read).length
+      })
+    }
+
+    Promise.all([
+      syncWrongIds().catch(() => {}),
+      syncFavoriteIds().catch(() => {}),
+      config.useApi && auth.getToken() ? auth.refreshProfile().catch(() => {}) : Promise.resolve()
+    ]).finally(applyLocal)
   },
 
   onLogin() {
@@ -57,11 +78,11 @@ Page({
     auth
       .loginWithWechat()
       .then(() => {
-        this.onShow()
+        this.refreshPage()
         wx.showToast({ title: "登录成功", icon: "success" })
       })
       .catch((err) => {
-        const msg = err.errMsg || ""
+        const msg = err.errMsg || err.message || ""
         if (msg.includes("cancel") || msg.includes("deny")) {
           wx.showToast({ title: "您取消了授权", icon: "none" })
         } else {
@@ -80,7 +101,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           auth.logout()
-          this.onShow()
+          this.refreshPage()
           wx.showToast({ title: "已退出", icon: "none" })
         }
       }

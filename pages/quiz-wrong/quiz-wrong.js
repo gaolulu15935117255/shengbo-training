@@ -1,14 +1,42 @@
-const { getWrongIds, clearWrong } = require("../../utils/quiz")
-const { getQuestionById } = require("../../data/questions")
+const { clearWrongRemote, syncWrongIds } = require("../../utils/quiz")
+const { quizApi } = require("../../utils/api")
+const config = require("../../config/api")
 
 Page({
   data: {
-    list: []
+    list: [],
+    loading: true
   },
 
   onShow() {
-    const list = getWrongIds().map(getQuestionById).filter(Boolean)
-    this.setData({ list })
+    this.loadList()
+  },
+
+  loadList() {
+    if (!config.useApi) {
+      const { getWrongIds } = require("../../utils/quiz")
+      const { getQuestionById } = require("../../data/questions")
+      const list = getWrongIds().map(getQuestionById).filter(Boolean)
+      this.setData({ list, loading: false })
+      return
+    }
+
+    syncWrongIds()
+      .then((ids) => {
+        if (!ids.length) {
+          this.setData({ list: [], loading: false })
+          return null
+        }
+        return quizApi.questionsBatch(ids, false)
+      })
+      .then((questions) => {
+        if (!questions) return
+        this.setData({ list: questions, loading: false })
+      })
+      .catch(() => {
+        this.setData({ loading: false })
+        wx.showToast({ title: "加载失败", icon: "none" })
+      })
   },
 
   startPractice() {
@@ -25,9 +53,10 @@ Page({
       content: "确定要清空所有错题吗？",
       success: (res) => {
         if (res.confirm) {
-          clearWrong()
-          this.setData({ list: [] })
-          wx.showToast({ title: "已清空", icon: "success" })
+          clearWrongRemote().then(() => {
+            this.setData({ list: [] })
+            wx.showToast({ title: "已清空", icon: "success" })
+          })
         }
       }
     })

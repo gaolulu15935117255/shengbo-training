@@ -1,6 +1,7 @@
 const storage = require("./utils/storage")
 const auth = require("./utils/auth")
 const permission = require("./utils/permission")
+const config = require("./config/api")
 
 App({
   globalData: {
@@ -16,6 +17,11 @@ App({
     this.globalData.purchasedIds = permission.getPurchasedIds()
     this.globalData.membership = permission.getMembership()
     auth.initDefaultMessages()
+
+    if (config.useApi && auth.getToken()) {
+      auth.refreshProfile().catch(() => {})
+      permission.syncPurchasedFromApi().catch(() => {})
+    }
   },
 
   markLearned(courseId) {
@@ -30,5 +36,9 @@ App({
   refreshUserData() {
     this.globalData.purchasedIds = permission.getPurchasedIds()
     this.globalData.membership = permission.getMembership()
+    if (config.useApi && auth.getToken()) {
+      auth.refreshProfile().catch(() => {})
+      permission.syncPurchasedFromApi().catch(() => {})
+    }
   }
 })

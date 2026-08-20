@@ -1,7 +1,13 @@
 const storage = require("./storage")
+const { authApi } = require("./api")
+const config = require("../config/api")
 
 function getUser() {
   return storage.get(storage.KEYS.USER, null)
+}
+
+function getToken() {
+  return storage.get(storage.KEYS.TOKEN, "")
 }
 
 function setUser(user) {
@@ -11,7 +17,7 @@ function setUser(user) {
 }
 
 function isLoggedIn() {
-  return !!getUser()
+  return !!getToken() && !!getUser()
 }
 
 function wxLogin() {
@@ -36,11 +42,29 @@ function getUserProfile() {
   })
 }
 
-/**
- * 标准微信登录：wx.login 获取身份 + getUserProfile 弹出授权框
- * 后续接后端时，将 wxCode 发给服务端换取 openid / session
- */
 function loginWithWechat() {
+  if (!config.useApi) {
+    return wxLogin()
+      .then((code) =>
+        getUserProfile().then((profileRes) => ({
+          code,
+          userInfo: profileRes.userInfo
+        }))
+      )
+      .then(({ code, userInfo }) => {
+        const user = {
+          nickName: userInfo.nickName || "微信用户",
+          avatarUrl: userInfo.avatarUrl || "",
+          gender: userInfo.gender,
+          wxCode: code,
+          loginTime: Date.now()
+        }
+        setUser(user)
+        initDefaultMessages()
+        return user
+      })
+  }
+
   return wxLogin()
     .then((code) =>
       getUserProfile().then((profileRes) => ({
@@ -48,12 +72,21 @@ function loginWithWechat() {
         userInfo: profileRes.userInfo
       }))
     )
-    .then(({ code, userInfo }) => {
+    .then(({ code, userInfo }) =>
+      authApi.login({
+        code,
+        nickName: userInfo.nickName,
+        avatarUrl: userInfo.avatarUrl
+      })
+    )
+    .then((data) => {
+      storage.set(storage.KEYS.TOKEN, data.token)
       const user = {
-        nickName: userInfo.nickName || "微信用户",
-        avatarUrl: userInfo.avatarUrl || "",
-        gender: userInfo.gender,
-        wxCode: code,
+        id: data.user.id,
+        nickName: data.user.nickName,
+        avatarUrl: data.user.avatarUrl || "",
+        membershipLabel: data.user.membershipLabel,
+        membershipExpire: data.user.membershipExpire,
         loginTime: Date.now()
       }
       setUser(user)
@@ -62,10 +95,34 @@ function loginWithWechat() {
     })
 }
 
+function refreshProfile() {
+  if (!config.useApi || !getToken()) {
+    return Promise.resolve(getUser())
+  }
+  return authApi.profile().then((profile) => {
+    const user = {
+      ...getUser(),
+      id: profile.id,
+      nickName: profile.nickName,
+      avatarUrl: profile.avatarUrl || "",
+      membershipLabel: profile.membership?.label || "普通用户",
+      membershipExpire: profile.membership?.expireAt || null,
+      stats: profile.stats
+    }
+    setUser(user)
+    return user
+  })
+}
+
 function logout() {
+  const token = getToken()
+  storage.remove(storage.KEYS.TOKEN)
   storage.remove(storage.KEYS.USER)
   const app = getApp()
   if (app) app.globalData.userInfo = null
+  if (config.useApi && token) {
+    authApi.logout().catch(() => {})
+  }
 }
 
 function initDefaultMessages() {
@@ -98,9 +155,11 @@ function formatDate(date) {
 
 module.exports = {
   getUser,
+  getToken,
   setUser,
   isLoggedIn,
   loginWithWechat,
+  refreshProfile,
   logout,
   initDefaultMessages
 }
