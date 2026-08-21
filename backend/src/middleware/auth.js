@@ -31,26 +31,34 @@ async function adminAuth(req, res, next) {
   }
 }
 
+async function loadUserFromToken(token) {
+  verifyUserToken(token);
+  const [sessions] = await pool.query(
+    'SELECT s.*, u.openid, u.nick_name, u.avatar_url, u.status AS user_status FROM user_sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > NOW() AND u.deleted_at IS NULL',
+    [token]
+  );
+  if (!sessions.length || sessions[0].user_status !== 1) {
+    return null;
+  }
+  return {
+    id: sessions[0].user_id,
+    openid: sessions[0].openid,
+    nickName: sessions[0].nick_name,
+    avatarUrl: sessions[0].avatar_url,
+  };
+}
+
 async function userAuth(req, res, next) {
   try {
     const token = extractToken(req);
     if (!token) {
       return fail(res, 40100, '未登录或 token 失效', null, 401);
     }
-    const payload = verifyUserToken(token);
-    const [sessions] = await pool.query(
-      'SELECT s.*, u.openid, u.nick_name, u.avatar_url, u.status AS user_status FROM user_sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > NOW() AND u.deleted_at IS NULL',
-      [token]
-    );
-    if (!sessions.length || sessions[0].user_status !== 1) {
+    const user = await loadUserFromToken(token);
+    if (!user) {
       return fail(res, 40100, '未登录或 token 失效', null, 401);
     }
-    req.user = {
-      id: sessions[0].user_id,
-      openid: sessions[0].openid,
-      nickName: sessions[0].nick_name,
-      avatarUrl: sessions[0].avatar_url,
-    };
+    req.user = user;
     req.token = token;
     next();
   } catch {
@@ -58,13 +66,20 @@ async function userAuth(req, res, next) {
   }
 }
 
-function optionalUserAuth(req, res, next) {
+async function optionalUserAuth(req, res, next) {
   const token = extractToken(req);
   if (!token) {
     req.user = null;
     return next();
   }
-  userAuth(req, res, next);
+  try {
+    const user = await loadUserFromToken(token);
+    req.user = user;
+    if (user) req.token = token;
+  } catch {
+    req.user = null;
+  }
+  next();
 }
 
 module.exports = { adminAuth, userAuth, optionalUserAuth, extractToken };

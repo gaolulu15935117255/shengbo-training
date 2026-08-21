@@ -81,8 +81,12 @@ Page({
           loading: false
         })
       })
-      .catch(() => {
-        wx.showToast({ title: "加载失败，请检查后端", icon: "none" })
+      .catch((err) => {
+        wx.showToast({
+          title: (err && err.message) || "加载失败，请检查后端",
+          icon: "none",
+          duration: 2500
+        })
         this.setData({ loading: false, banners: this.getFallbackBanners() })
       })
   },

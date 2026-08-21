@@ -33,6 +33,11 @@ app.get('/health', (_req, res) => {
   res.json({ code: 0, message: 'ok', data: { status: 'up', env: config.nodeEnv } });
 });
 
+const publicDir = path.join(__dirname, '../public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
+
 app.use('/api/auth', apiAuthRoutes);
 app.use('/api/quiz', apiQuizRoutes);
 app.use('/api/content', apiContentRoutes);
@@ -53,6 +58,7 @@ if (config.adminStaticDir) {
     app.use(express.static(staticPath));
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api')) return next();
+      if (/^\/MP_verify_[A-Za-z0-9]+\.txt$/.test(req.path)) return next();
       res.sendFile(path.join(staticPath, 'index.html'));
     });
   }

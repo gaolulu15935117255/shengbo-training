@@ -82,9 +82,13 @@ Page({
         const profileStats = results[3]
         applyStats(profileStats)
       })
-      .catch(() => {
+      .catch((err) => {
         applyStats(getQuizStats())
-        wx.showToast({ title: "题库加载失败", icon: "none" })
+        wx.showToast({
+          title: (err && err.message) || "题库加载失败",
+          icon: "none",
+          duration: 2500
+        })
       })
   },
 
