@@ -41,7 +41,9 @@ function request(options, isRetry) {
         if (body && body.code === 40100) {
           storage.remove(storage.KEYS.TOKEN)
           const method = (options.method || "GET").toUpperCase()
-          if (!isRetry && token && method === "GET") {
+          const url = options.url || ""
+          const canRetryAsGuest = method === "GET" && url.indexOf("/api/auth/") !== 0
+          if (!isRetry && token && canRetryAsGuest) {
             request(options, true).then(resolve, reject)
             return
           }

@@ -1,16 +1,12 @@
 const express = require('express');
-const crypto = require('crypto');
 const pool = require('../../db/pool');
-const { signUserToken, getExpiresInSeconds } = require('../../utils/jwt');
+const { signUserToken, getExpiresInSeconds, hashToken } = require('../../utils/jwt');
+const { code2Session } = require('../../utils/wechat');
 const config = require('../../config');
 const { success, fail } = require('../../utils/response');
 const { userAuth } = require('../../middleware/auth');
 
 const router = express.Router();
-
-function mockOpenidFromCode(code) {
-  return `mock_${crypto.createHash('sha256').update(String(code)).digest('hex').slice(0, 28)}`;
-}
 
 router.post('/login', async (req, res) => {
   try {
@@ -19,7 +15,15 @@ router.post('/login', async (req, res) => {
       return fail(res, 40001, 'code 不能为空');
     }
 
-    const openid = mockOpenidFromCode(code);
+    let session;
+    try {
+      session = await code2Session(code);
+    } catch (wxErr) {
+      console.error(wxErr);
+      return fail(res, 60001, wxErr.message || '微信登录 code 无效');
+    }
+
+    const { openid, unionid } = session;
     let userId;
 
     const [existing] = await pool.query(
@@ -33,13 +37,13 @@ router.post('/login', async (req, res) => {
         return fail(res, 40300, '账号已被禁用');
       }
       await pool.query(
-        'UPDATE users SET nick_name = COALESCE(?, nick_name), avatar_url = COALESCE(?, avatar_url), last_login_at = NOW() WHERE id = ?',
-        [nickName || null, avatarUrl || null, userId]
+        'UPDATE users SET nick_name = COALESCE(?, nick_name), avatar_url = COALESCE(?, avatar_url), unionid = COALESCE(?, unionid), last_login_at = NOW() WHERE id = ?',
+        [nickName || null, avatarUrl || null, unionid, userId]
       );
     } else {
       const [result] = await pool.query(
-        'INSERT INTO users (openid, nick_name, avatar_url, last_login_at) VALUES (?, ?, ?, NOW())',
-        [openid, nickName || '微信用户', avatarUrl || null]
+        'INSERT INTO users (openid, unionid, nick_name, avatar_url, last_login_at) VALUES (?, ?, ?, ?, NOW())',
+        [openid, unionid, nickName || '微信用户', avatarUrl || null]
       );
       userId = result.insertId;
       await pool.query('INSERT INTO user_stats (user_id) VALUES (?)', [userId]);
@@ -51,7 +55,7 @@ router.post('/login', async (req, res) => {
 
     await pool.query(
       'INSERT INTO user_sessions (user_id, token, expires_at, client_type) VALUES (?, ?, ?, ?)',
-      [userId, token, expiresAt, 'miniapp']
+      [userId, hashToken(token), expiresAt, 'miniapp']
     );
 
     const [memberships] = await pool.query(
@@ -125,7 +129,7 @@ router.get('/profile', userAuth, async (req, res) => {
 
 router.post('/logout', userAuth, async (req, res) => {
   try {
-    await pool.query('DELETE FROM user_sessions WHERE token = ?', [req.token]);
+    await pool.query('DELETE FROM user_sessions WHERE token IN (?, ?)', [hashToken(req.token), req.token]);
     return success(res, null);
   } catch (err) {
     console.error(err);

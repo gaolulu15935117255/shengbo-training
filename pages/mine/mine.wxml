@@ -1,14 +1,13 @@
 <view class="container">
   <!-- 用户信息 -->
   <view class="card profile">
-    <view wx:if="{{isLoggedIn}}" class="profile-row" bindtap="onLogout">
+    <view wx:if="{{isLoggedIn}}" class="profile-row">
       <image wx:if="{{userInfo.avatarUrl}}" class="avatar-img" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
       <view wx:else class="avatar">{{userInfo.nickName[0]}}</view>
       <view class="profile-info">
         <view class="name">{{userInfo.nickName}}</view>
         <view class="member-tag">{{membershipLabel}}</view>
         <view class="expire" wx:if="{{membershipExpire}}">{{membershipExpire}}</view>
-        <view class="logout-hint">点击退出登录</view>
       </view>
     </view>
     <button
@@ -21,8 +20,8 @@
       <view class="login-inner">
         <view class="wechat-icon">微</view>
         <view>
-          <view class="name">微信授权登录</view>
-          <view class="summary">授权获取昵称和头像，同步学习数据</view>
+          <view class="name">微信一键登录</view>
+          <view class="summary">登录后同步学习进度和会员权益</view>
         </view>
       </view>
     </button>
@@ -75,6 +74,8 @@
       <text class="arrow">›</text>
     </view>
   </view>
+
+  <view wx:if="{{isLoggedIn}}" class="logout-btn" bindtap="onLogout">退出登录</view>
 </view>
 
 <tab-bar active="mine" />

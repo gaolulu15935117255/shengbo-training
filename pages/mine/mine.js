@@ -86,7 +86,7 @@ Page({
         if (msg.includes("cancel") || msg.includes("deny")) {
           wx.showToast({ title: "您取消了授权", icon: "none" })
         } else {
-          wx.showToast({ title: "登录失败，请重试", icon: "none" })
+          wx.showToast({ title: msg.slice(0, 40) || "登录失败，请重试", icon: "none" })
         }
       })
       .finally(() => {

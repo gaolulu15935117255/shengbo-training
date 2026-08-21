@@ -33,6 +33,8 @@ cp .env.example .env
 | `DB_NAME` | 库名，默认 `shengbo_training` |
 | `JWT_SECRET` | 小程序用户 JWT 密钥 |
 | `ADMIN_JWT_SECRET` | 后台管理员 JWT 密钥 |
+| `WECHAT_APPID` | 小程序 AppID，默认 `wxa13bf3f00f8cb4d8` |
+| `WECHAT_APP_SECRET` | 小程序 AppSecret（登录必填，否则无法绑定真实 openid） |
 | `PORT` | 服务端口，默认 3088 |
 
 ### 3. 初始化数据库
@@ -73,7 +75,7 @@ npm run dev
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/auth/login` | 微信登录（mock openid） |
+| POST | `/api/auth/login` | 微信登录（code 换 openid） |
 | GET | `/api/quiz/categories` | 题库分类 |
 | GET | `/api/quiz/questions/ids` | 题目 ID 列表 |
 | GET | `/api/products` | 商品列表 |
@@ -155,6 +157,8 @@ ADMIN_STATIC_DIR=../admin/dist
 
 ## 注意事项
 
-- 微信登录、微信支付、OSS 上传等为 **stub/预留**，生产环境需对接真实服务。
+- 微信登录需在 `.env` 配置 `WECHAT_APPID`、`WECHAT_APP_SECRET`；未配置时仅本地 mock。
+- 若线上曾出现「登录成功立刻退出」，对已有库执行 `sql/patch_user_sessions_token.sql`。
+- 微信支付、OSS 上传等为预留，生产环境需另行对接。
 - 金额统一使用 **分**（整数）存储。
 - 生产环境请更换 JWT 密钥并使用 HTTPS。

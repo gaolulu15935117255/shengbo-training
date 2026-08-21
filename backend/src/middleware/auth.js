@@ -1,4 +1,4 @@
-const { verifyAdminToken, verifyUserToken } = require('../utils/jwt');
+const { verifyAdminToken, verifyUserToken, hashToken } = require('../utils/jwt');
 const { fail } = require('../utils/response');
 const pool = require('../db/pool');
 
@@ -34,8 +34,8 @@ async function adminAuth(req, res, next) {
 async function loadUserFromToken(token) {
   verifyUserToken(token);
   const [sessions] = await pool.query(
-    'SELECT s.*, u.openid, u.nick_name, u.avatar_url, u.status AS user_status FROM user_sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > NOW() AND u.deleted_at IS NULL',
-    [token]
+    'SELECT s.*, u.openid, u.nick_name, u.avatar_url, u.status AS user_status FROM user_sessions s JOIN users u ON u.id = s.user_id WHERE s.token IN (?, ?) AND s.expires_at > NOW() AND u.deleted_at IS NULL',
+    [hashToken(token), token]
   );
   if (!sessions.length || sessions[0].user_status !== 1) {
     return null;

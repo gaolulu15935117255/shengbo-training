@@ -32,53 +32,23 @@ function wxLogin() {
   })
 }
 
-function getUserProfile() {
-  return new Promise((resolve, reject) => {
-    wx.getUserProfile({
-      desc: "用于展示学员昵称和头像，同步学习进度",
-      success: resolve,
-      fail: reject
-    })
-  })
-}
-
 function loginWithWechat() {
   if (!config.useApi) {
-    return wxLogin()
-      .then((code) =>
-        getUserProfile().then((profileRes) => ({
-          code,
-          userInfo: profileRes.userInfo
-        }))
-      )
-      .then(({ code, userInfo }) => {
-        const user = {
-          nickName: userInfo.nickName || "微信用户",
-          avatarUrl: userInfo.avatarUrl || "",
-          gender: userInfo.gender,
-          wxCode: code,
-          loginTime: Date.now()
-        }
-        setUser(user)
-        initDefaultMessages()
-        return user
-      })
+    return wxLogin().then((code) => {
+      const user = {
+        nickName: "微信用户",
+        avatarUrl: "",
+        wxCode: code,
+        loginTime: Date.now()
+      }
+      setUser(user)
+      initDefaultMessages()
+      return user
+    })
   }
 
   return wxLogin()
-    .then((code) =>
-      getUserProfile().then((profileRes) => ({
-        code,
-        userInfo: profileRes.userInfo
-      }))
-    )
-    .then(({ code, userInfo }) =>
-      authApi.login({
-        code,
-        nickName: userInfo.nickName,
-        avatarUrl: userInfo.avatarUrl
-      })
-    )
+    .then((code) => authApi.login({ code }))
     .then((data) => {
       storage.set(storage.KEYS.TOKEN, data.token)
       const user = {

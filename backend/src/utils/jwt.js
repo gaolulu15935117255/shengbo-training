@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 
@@ -27,10 +28,15 @@ function getExpiresInSeconds(expiresIn) {
   return n * (map[unit] || 86400);
 }
 
+function hashToken(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
 module.exports = {
   signUserToken,
   verifyUserToken,
   signAdminToken,
   verifyAdminToken,
   getExpiresInSeconds,
+  hashToken,
 };

@@ -28,4 +28,9 @@ module.exports = {
 
   adminStaticDir: process.env.ADMIN_STATIC_DIR || null,
   uploadDir: process.env.UPLOAD_DIR || require('path').join(__dirname, '../uploads'),
+
+  wechat: {
+    appId: process.env.WECHAT_APPID || 'wxa13bf3f00f8cb4d8',
+    appSecret: process.env.WECHAT_APP_SECRET || process.env.WECHAT_SECRET || '',
+  },
 };
