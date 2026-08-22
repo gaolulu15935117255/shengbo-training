@@ -21,6 +21,29 @@
   line-height: 1.7;
 }
 
+.progress-wrap {
+  margin-top: 20rpx;
+}
+
+.progress-label {
+  font-size: 24rpx;
+  color: #007aff;
+  margin-bottom: 10rpx;
+}
+
+.progress-bar {
+  height: 12rpx;
+  background: #e8f2ff;
+  border-radius: 8rpx;
+  overflow: hidden;
+}
+
+.progress-inner {
+  height: 100%;
+  background: #007aff;
+  border-radius: 8rpx;
+}
+
 .outline-item {
   display: flex;
   align-items: flex-start;
@@ -58,10 +81,12 @@
   font-size: 24rpx;
 }
 
-.lesson-duration {
-  font-size: 24rpx;
-  color: #86868b;
-  margin-top: 4rpx;
+.lesson-item.learned .lesson-icon {
+  color: #34c759;
+}
+
+.lesson-item.learned .lesson-duration {
+  color: #34c759;
 }
 
 .action-row {

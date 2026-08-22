@@ -5,11 +5,12 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const pool = require('../../db/pool');
 const { signUserToken, getExpiresInSeconds, hashToken } = require('../../utils/jwt');
-const { code2Session } = require('../../utils/wechat');
+const { code2Session, getPhoneNumberByCode } = require('../../utils/wechat');
 const config = require('../../config');
 const { success, fail } = require('../../utils/response');
 const { userAuth } = require('../../middleware/auth');
 const { toPublicUrl, sanitizeNickName, sanitizeAvatarUrl, sanitizeGender } = require('../../utils/publicUrl');
+const { ensureWelcomeMessages, maskPhone } = require('../../utils/userMessage');
 
 const router = express.Router();
 
@@ -51,6 +52,8 @@ function mapLoginUser(userId, userRow, membership) {
     nickName: userRow.nick_name,
     avatarUrl: userRow.avatar_url,
     gender: userRow.gender || 0,
+    phone: maskPhone(userRow.phone),
+    phoneBound: !!userRow.phone,
     membershipLabel: membership ? MEMBERSHIP_LABELS[membership.level] || '会员' : '普通用户',
     membershipExpire: membership?.expire_at || null,
   };
@@ -100,6 +103,8 @@ router.post('/login', async (req, res) => {
       await pool.query('INSERT INTO user_stats (user_id) VALUES (?)', [userId]);
     }
 
+    await ensureWelcomeMessages(userId);
+
     const token = signUserToken({ userId, openid });
     const expiresIn = getExpiresInSeconds(config.jwt.expiresIn);
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
@@ -110,7 +115,7 @@ router.post('/login', async (req, res) => {
     );
 
     const membership = await getActiveMembership(userId);
-    const [userRows] = await pool.query('SELECT nick_name, avatar_url, gender FROM users WHERE id = ?', [userId]);
+    const [userRows] = await pool.query('SELECT nick_name, avatar_url, gender, phone FROM users WHERE id = ?', [userId]);
 
     return success(res, {
       token,
@@ -127,7 +132,7 @@ router.get('/profile', userAuth, async (req, res) => {
   try {
     const userId = req.user.id;
     const [users] = await pool.query(
-      'SELECT id, nick_name, avatar_url, gender FROM users WHERE id = ?',
+      'SELECT id, nick_name, avatar_url, gender, phone FROM users WHERE id = ?',
       [userId]
     );
     const [memberships] = await pool.query(
@@ -144,6 +149,8 @@ router.get('/profile', userAuth, async (req, res) => {
       nickName: users[0].nick_name,
       avatarUrl: users[0].avatar_url,
       gender: users[0].gender || 0,
+      phone: maskPhone(users[0].phone),
+      phoneBound: !!users[0].phone,
       membership: m
         ? {
             level: m.level,
@@ -179,7 +186,7 @@ router.put('/profile', userAuth, async (req, res) => {
       [nickName, avatarUrl, gender, req.user.id]
     );
 
-    const [userRows] = await pool.query('SELECT nick_name, avatar_url, gender FROM users WHERE id = ?', [req.user.id]);
+    const [userRows] = await pool.query('SELECT nick_name, avatar_url, gender, phone FROM users WHERE id = ?', [req.user.id]);
     const membership = await getActiveMembership(req.user.id);
     return success(res, mapLoginUser(req.user.id, userRows[0], membership));
   } catch (err) {
@@ -206,6 +213,33 @@ router.post('/avatar', userAuth, (req, res) => {
       return fail(res, 50000, '服务器内部错误', null, 500);
     }
   });
+});
+
+router.post('/phone', userAuth, async (req, res) => {
+  try {
+    const code = req.body && req.body.code;
+    if (!code) {
+      return fail(res, 40001, '手机号授权码不能为空');
+    }
+    let phone;
+    try {
+      phone = await getPhoneNumberByCode(code);
+    } catch (wxErr) {
+      console.error(wxErr);
+      return fail(res, 60001, wxErr.message || '获取手机号失败');
+    }
+
+    await pool.query('UPDATE users SET phone = ? WHERE id = ?', [phone, req.user.id]);
+    const [userRows] = await pool.query(
+      'SELECT nick_name, avatar_url, gender, phone FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    const membership = await getActiveMembership(req.user.id);
+    return success(res, mapLoginUser(req.user.id, userRows[0], membership));
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
 });
 
 router.post('/logout', userAuth, async (req, res) => {

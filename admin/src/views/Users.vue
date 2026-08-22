@@ -27,6 +27,9 @@
             </div>
           </template>
         </el-table-column>
+        <el-table-column prop="phone" label="手机号" width="130">
+          <template #default="{ row }">{{ row.phone || '-' }}</template>
+        </el-table-column>
         <el-table-column prop="membershipLabel" label="会员等级" width="120" />
         <el-table-column label="会员到期" width="120">
           <template #default="{ row }">
@@ -67,6 +70,7 @@
           </div>
 
           <el-descriptions :column="1" border class="detail-desc">
+            <el-descriptions-item label="手机号">{{ detail.phone || '-' }}</el-descriptions-item>
             <el-descriptions-item label="会员等级">
               {{ detail.membership?.label || detail.membershipLabel || '普通用户' }}
             </el-descriptions-item>

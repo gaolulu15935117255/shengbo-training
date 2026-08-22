@@ -13,6 +13,9 @@ const authApi = {
   uploadAvatar(filePath) {
     return uploadFile("/api/auth/avatar", filePath, "file")
   },
+  bindPhone(data) {
+    return post("/api/auth/phone", data)
+  },
   logout() {
     return post("/api/auth/logout")
   }
@@ -96,7 +99,28 @@ const payApi = {
 const userApi = {
   entitlements() {
     return get("/api/user/entitlements")
+  },
+  courses() {
+    return get("/api/user/courses")
+  },
+  updateCourseProgress(courseCode, data) {
+    return post(`/api/user/courses/${courseCode}/progress`, data || {})
+  },
+  messages(params) {
+    return get("/api/user/messages", params)
+  },
+  readMessage(id) {
+    return put(`/api/user/messages/${id}/read`)
   }
 }
 
-module.exports = { authApi, contentApi, quizApi, productsApi, ordersApi, payApi, userApi }
+const coursesApi = {
+  list(params) {
+    return get("/api/courses", params)
+  },
+  detail(courseCode) {
+    return get(`/api/courses/${courseCode}`)
+  }
+}
+
+module.exports = { authApi, contentApi, quizApi, productsApi, ordersApi, payApi, userApi, coursesApi }

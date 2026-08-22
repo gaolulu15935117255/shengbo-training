@@ -49,6 +49,8 @@ function applyServerUser(data, extra) {
     gender: data.gender != null ? data.gender : prev.gender,
     membershipLabel: data.membershipLabel || prev.membershipLabel || "普通用户",
     membershipExpire: data.membershipExpire !== undefined ? data.membershipExpire : prev.membershipExpire,
+    phone: data.phone !== undefined ? data.phone : prev.phone || "",
+    phoneBound: data.phoneBound != null ? !!data.phoneBound : prev.phoneBound || false,
     loginTime: prev.loginTime || Date.now(),
     ...(extra || {})
   }
@@ -141,11 +143,18 @@ function completeLogin(code, profile) {
       gender: data.user.gender || gender || 0,
       membershipLabel: data.user.membershipLabel,
       membershipExpire: data.user.membershipExpire,
+      phone: data.user.phone || "",
+      phoneBound: !!data.user.phoneBound,
       loginTime: Date.now()
     }
     setUser(user)
     initDefaultMessages()
-    return syncQuizAfterLogin().then(() => user)
+    return syncQuizAfterLogin().then(() => {
+      try {
+        require("./course").syncLocalLearnedToCloud().catch(() => {})
+      } catch (e) {}
+      return user
+    })
   })
 }
 
@@ -206,6 +215,8 @@ function refreshProfile() {
       gender: profile.gender || 0,
       membershipLabel: profile.membership?.label || "普通用户",
       membershipExpire: profile.membership?.expireAt || null,
+      phone: profile.phone || "",
+      phoneBound: !!profile.phoneBound,
       stats: profile.stats
     }
     setUser(user)
@@ -233,6 +244,15 @@ function uploadAvatar(filePath) {
     setUser({ ...getUser(), avatarUrl })
     return avatarUrl
   })
+}
+
+function bindPhone(code) {
+  if (!config.useApi) {
+    const user = { ...getUser(), phone: "未在本地模式绑定", phoneBound: false }
+    setUser(user)
+    return Promise.reject(new Error("请连接服务器后绑定手机号"))
+  }
+  return authApi.bindPhone({ code }).then((data) => applyServerUser(data))
 }
 
 function logout() {
@@ -287,6 +307,7 @@ module.exports = {
   refreshProfile,
   updateProfile,
   uploadAvatar,
+  bindPhone,
   logout,
   initDefaultMessages
 }

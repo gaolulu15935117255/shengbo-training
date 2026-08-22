@@ -107,8 +107,8 @@
 .upgrade-btn {
   position: absolute;
   right: 28rpx;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 36rpx;
+  transform: none;
   background: #007aff;
   color: #ffffff;
   padding: 10rpx 24rpx;
@@ -116,6 +116,33 @@
   font-size: 24rpx;
   font-weight: 600;
   z-index: 2;
+}
+
+.phone-row {
+  margin-top: 20rpx;
+  padding-right: 140rpx;
+}
+
+.phone-text {
+  font-size: 24rpx;
+  color: #86868b;
+}
+
+.phone-bind-btn {
+  display: inline-block;
+  margin: 0;
+  padding: 0 20rpx;
+  height: 52rpx;
+  line-height: 52rpx;
+  font-size: 22rpx;
+  color: #007aff;
+  background: #e8f2ff;
+  border-radius: 26rpx;
+  border: none;
+}
+
+.phone-bind-btn::after {
+  border: none;
 }
 
 .summary {

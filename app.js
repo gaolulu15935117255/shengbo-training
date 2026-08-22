@@ -22,15 +22,23 @@ App({
       auth.refreshProfile().catch(() => {})
       permission.syncPurchasedFromApi().catch(() => {})
       require("./utils/quiz").syncAllUserData().catch(() => {})
+      require("./utils/course").syncLocalLearnedToCloud().catch(() => {})
     }
   },
 
-  markLearned(courseId) {
-    const ids = this.globalData.learnedIds
+  markLearnedLocal(courseId) {
+    const ids = this.globalData.learnedIds || []
     if (!ids.includes(courseId)) {
       ids.push(courseId)
       this.globalData.learnedIds = ids
       storage.set(storage.KEYS.LEARNED, ids)
+    }
+  },
+
+  markLearned(courseId) {
+    this.markLearnedLocal(courseId)
+    if (config.useApi && auth.getToken()) {
+      require("./utils/course").startCourse(courseId).catch(() => {})
     }
   },
 
@@ -41,6 +49,7 @@ App({
       auth.refreshProfile().catch(() => {})
       permission.syncPurchasedFromApi().catch(() => {})
       require("./utils/quiz").syncAllUserData().catch(() => {})
+      require("./utils/course").syncLocalLearnedToCloud().catch(() => {})
     }
   }
 })

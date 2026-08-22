@@ -1,4 +1,4 @@
-const { courses } = require("../../data/courses")
+const { listMyCourses } = require("../../utils/course")
 const { formatLearnedCount } = require("../../utils/util")
 const auth = require("../../utils/auth")
 const permission = require("../../utils/permission")
@@ -12,6 +12,7 @@ const {
 } = require("../../utils/quiz")
 const storage = require("../../utils/storage")
 const config = require("../../config/api")
+const { userApi } = require("../../utils/api")
 
 Page({
   data: {
@@ -19,6 +20,7 @@ Page({
     avatarLetter: "微",
     isLoggedIn: false,
     loggingIn: false,
+    bindingPhone: false,
     needsProfile: false,
     showProfileEditor: false,
     editNickName: "",
@@ -47,13 +49,9 @@ Page({
   },
 
   refreshPage() {
-    const applyLocal = () => {
+    const apply = (learnedCourses, unreadCount) => {
       const userInfo = auth.getUser()
-      const learnedIds = getApp().globalData.learnedIds || []
-      const learnedCourses = courses.filter((item) => learnedIds.includes(item.id))
       const stats = userInfo && userInfo.stats ? userInfo.stats : getQuizStats()
-      const messages = storage.get(storage.KEYS.MESSAGES, [])
-
       this.setData({
         userInfo,
         avatarLetter: (userInfo && userInfo.nickName ? userInfo.nickName : "微").charAt(0),
@@ -71,15 +69,25 @@ Page({
             : getAccuracy(),
         wrongCount: getWrongIds().length,
         favoriteCount: getFavoriteIds().length,
-        unreadCount: messages.filter((m) => !m.read).length
+        unreadCount
       })
     }
+
+    const localUnread = (storage.get(storage.KEYS.MESSAGES, []) || []).filter((m) => !m.read).length
 
     Promise.all([
       syncWrongIds().catch(() => {}),
       syncFavoriteIds().catch(() => {}),
-      config.useApi && auth.getToken() ? auth.refreshProfile().catch(() => {}) : Promise.resolve()
-    ]).finally(applyLocal)
+      config.useApi && auth.getToken() ? auth.refreshProfile().catch(() => {}) : Promise.resolve(),
+      listMyCourses().catch(() => []),
+      config.useApi && auth.getToken()
+        ? userApi.messages({ page: 1, pageSize: 1 }).then((data) => data.unreadCount || 0).catch(() => localUnread)
+        : Promise.resolve(localUnread)
+    ]).then((results) => {
+      apply(results[3] || [], results[4] || 0)
+    }).catch(() => {
+      apply([], localUnread)
+    })
   },
 
   onLogin() {
@@ -106,6 +114,31 @@ Page({
       })
       .finally(() => {
         this.setData({ loggingIn: false })
+      })
+  },
+
+  onGetPhoneNumber(e) {
+    const detail = e.detail || {}
+    if (!detail.errMsg || detail.errMsg.indexOf("ok") === -1) {
+      wx.showToast({ title: "未授权手机号", icon: "none" })
+      return
+    }
+    if (!detail.code) {
+      wx.showToast({ title: "请升级微信后重试", icon: "none" })
+      return
+    }
+    this.setData({ bindingPhone: true })
+    auth
+      .bindPhone(detail.code)
+      .then(() => {
+        this.refreshPage()
+        wx.showToast({ title: "手机号已绑定", icon: "success" })
+      })
+      .catch((err) => {
+        wx.showToast({ title: (err && err.message) || "绑定失败", icon: "none" })
+      })
+      .finally(() => {
+        this.setData({ bindingPhone: false })
       })
   },
 

@@ -31,6 +31,7 @@ app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 const { router: apiPayRoutes, handlePayNotify } = require('./routes/api/pay');
 const { router: apiOrderRoutes } = require('./routes/api/orders');
 const apiUserRoutes = require('./routes/api/user');
+const apiCoursesRoutes = require('./routes/api/courses');
 
 app.use('/api/pay/notify', express.raw({ type: '*/*' }), handlePayNotify);
 app.use(express.json({ limit: '2mb' }));
@@ -57,6 +58,7 @@ app.use('/api/products', apiProductsRoutes);
 app.use('/api/orders', apiOrderRoutes);
 app.use('/api/pay', apiPayRoutes);
 app.use('/api/user', apiUserRoutes);
+app.use('/api/courses', apiCoursesRoutes);
 
 app.use('/api/admin/auth', adminAuthRoutes);
 

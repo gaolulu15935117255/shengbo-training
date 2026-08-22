@@ -7,6 +7,12 @@
     </view>
     <view class="meta">{{course.level}} · {{course.duration}} · {{priceText}}</view>
     <view class="desc">{{course.desc}}</view>
+    <view class="progress-wrap" wx:if="{{learned}}">
+      <view class="progress-label">学习进度 {{progress}}%</view>
+      <view class="progress-bar">
+        <view class="progress-inner" style="width: {{progress}}%;"></view>
+      </view>
+    </view>
   </view>
 
   <view class="section-title">课程大纲</view>
@@ -19,11 +25,11 @@
 
   <view class="section-title">课时列表</view>
   <view class="card">
-    <view class="lesson-item" wx:for="{{course.lessons}}" wx:key="title">
-      <text class="lesson-icon">▶</text>
+    <view class="lesson-item {{item.learned ? 'learned' : ''}}" wx:for="{{course.lessons}}" wx:key="id" bindtap="markLesson" data-id="{{item.id}}">
+      <text class="lesson-icon">{{item.learned ? '✓' : '▶'}}</text>
       <view class="lesson-info">
         <view>{{item.title}}</view>
-        <view class="lesson-duration">{{item.duration}}</view>
+        <view class="lesson-duration">{{item.duration}}{{item.learned ? ' · 已学完' : ' · 点此标记完成'}}</view>
       </view>
     </view>
   </view>

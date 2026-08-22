@@ -1,4 +1,5 @@
 const pool = require('../db/pool');
+const { insertUserMessage } = require('../utils/userMessage');
 
 const STATUS_LABELS = {
   pending: '待支付',
@@ -190,6 +191,15 @@ async function fulfillPaidOrder(orderNo, payInfo = {}) {
 
     await conn.commit();
     order.status = 'paid';
+    try {
+      await insertUserMessage(
+        order.user_id,
+        '购买成功',
+        `您已成功购买「${order.product_title}」，对应课程和题库已开通，可在「我的课程」中查看。`
+      );
+    } catch (msgErr) {
+      console.error(msgErr);
+    }
     return order;
   } catch (err) {
     await conn.rollback();
@@ -302,6 +312,15 @@ async function refundPaidOrder(orderNo, { reason, amount, operatorId, transactio
     );
 
     await conn.commit();
+    try {
+      await insertUserMessage(
+        order.user_id,
+        '退款成功',
+        `订单「${order.product_title}」已退款，对应权益已收回。如有疑问请联系培训中心。`
+      );
+    } catch (msgErr) {
+      console.error(msgErr);
+    }
     return { order, refundNo, refundAmount, transactionId };
   } catch (err) {
     await conn.rollback();

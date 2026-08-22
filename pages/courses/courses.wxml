@@ -24,8 +24,8 @@
       <text class="tag tag-lock" wx:elif="{{item.locked}}">付费</text>
     </view>
     <view class="course-desc">{{item.desc}}</view>
-    <view class="course-meta">{{item.level}} · {{item.duration}} · {{item.priceText}}</view>
+    <view class="course-meta">{{item.level}} · {{item.duration}} · {{item.priceText}}{{item.progressText}}</view>
   </view>
 
-  <view wx:if="{{list.length === 0}}" class="empty">该分类暂无课程</view>
+  <view wx:if="{{list.length === 0 && !loading}}" class="empty">{{mineOnly ? '还没有开始学习的课程' : '该分类暂无课程'}}</view>
 </view>

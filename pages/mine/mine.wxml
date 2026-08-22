@@ -26,6 +26,17 @@
         </view>
       </view>
     </button>
+    <view wx:if="{{isLoggedIn}}" class="phone-row">
+      <view wx:if="{{userInfo.phoneBound}}" class="phone-text">手机号 {{userInfo.phone}}</view>
+      <button
+        wx:else
+        class="phone-bind-btn"
+        open-type="getPhoneNumber"
+        bindgetphonenumber="onGetPhoneNumber"
+        loading="{{bindingPhone}}"
+        disabled="{{bindingPhone}}"
+      >绑定微信手机号</button>
+    </view>
     <view class="upgrade-btn" catchtap="goShop" wx:if="{{membershipLabel === '普通用户'}}">开通会员 ›</view>
   </view>
 
@@ -60,7 +71,7 @@
   <view class="card course-row" wx:for="{{learnedCourses}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
     <view>
       <view class="course-title">{{item.title}}</view>
-      <view class="course-meta">{{item.level}} · {{item.duration}}</view>
+      <view class="course-meta">{{item.level}} · {{item.duration}}{{item.progressText}}</view>
     </view>
     <text class="arrow">›</text>
   </view>
