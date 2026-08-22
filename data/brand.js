@@ -72,9 +72,9 @@ const announcements = [
 const contact = {
   phone: "400-888-6688",
   wechat: "shengbo_peixun",
-  address: "广东省广州市天河区培训大道168号圣博培训基地",
-  latitude: 23.1291,
-  longitude: 113.2644
+  address: "上海市闵行区都会路2849弄22号（上三楼）圣博职业技能培训中心",
+  latitude: 31.0826,
+  longitude: 121.4068
 }
 
 module.exports = {

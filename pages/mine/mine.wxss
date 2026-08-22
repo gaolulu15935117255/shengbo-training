@@ -37,6 +37,7 @@
 
 .profile-info {
   flex: 1;
+  padding-right: 140rpx;
 }
 
 .logout-btn {
@@ -103,12 +104,6 @@
   margin-top: 4rpx;
 }
 
-.summary {
-  margin-top: 8rpx;
-  color: #86868b;
-  font-size: 26rpx;
-}
-
 .upgrade-btn {
   position: absolute;
   right: 28rpx;
@@ -120,6 +115,102 @@
   border-radius: 20rpx;
   font-size: 24rpx;
   font-weight: 600;
+  z-index: 2;
+}
+
+.summary {
+  margin-top: 8rpx;
+  color: #86868b;
+  font-size: 26rpx;
+}
+
+.edit-hint {
+  font-size: 22rpx;
+  color: #007aff;
+  margin-top: 8rpx;
+}
+
+.profile-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.profile-editor {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding: 40rpx 48rpx calc(48rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.editor-title {
+  text-align: center;
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.editor-desc {
+  text-align: center;
+  color: #86868b;
+  font-size: 24rpx;
+  margin-top: 12rpx;
+  margin-bottom: 36rpx;
+}
+
+.avatar-picker {
+  width: 160rpx;
+  height: 160rpx;
+  padding: 0;
+  margin: 0 auto 32rpx;
+  background: #f5f5f7;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-picker::after {
+  border: none;
+}
+
+.avatar-preview {
+  width: 160rpx;
+  height: 160rpx;
+}
+
+.avatar-placeholder {
+  font-size: 26rpx;
+  color: #007aff;
+}
+
+.nickname-input {
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #f5f5f7;
+  border-radius: 16rpx;
+  padding: 0 28rpx;
+  font-size: 30rpx;
+  margin-bottom: 32rpx;
+}
+
+.editor-save {
+  width: 100%;
+}
+
+.editor-cancel {
+  text-align: center;
+  color: #86868b;
+  font-size: 26rpx;
+  padding: 28rpx 0 8rpx;
 }
 
 .stats-card {

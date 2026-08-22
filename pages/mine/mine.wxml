@@ -1,13 +1,14 @@
 <view class="container">
   <!-- 用户信息 -->
   <view class="card profile">
-    <view wx:if="{{isLoggedIn}}" class="profile-row">
+    <view wx:if="{{isLoggedIn}}" class="profile-row" bindtap="openProfileEditor">
       <image wx:if="{{userInfo.avatarUrl}}" class="avatar-img" src="{{userInfo.avatarUrl}}" mode="aspectFill" />
-      <view wx:else class="avatar">{{userInfo.nickName[0]}}</view>
+      <view wx:else class="avatar">{{avatarLetter}}</view>
       <view class="profile-info">
         <view class="name">{{userInfo.nickName}}</view>
         <view class="member-tag">{{membershipLabel}}</view>
         <view class="expire" wx:if="{{membershipExpire}}">{{membershipExpire}}</view>
+        <view class="edit-hint">{{needsProfile ? "点击完善微信头像和昵称" : "点击修改头像和昵称"}}</view>
       </view>
     </view>
     <button
@@ -20,12 +21,12 @@
       <view class="login-inner">
         <view class="wechat-icon">微</view>
         <view>
-          <view class="name">微信一键登录</view>
-          <view class="summary">登录后同步学习进度和会员权益</view>
+          <view class="name">微信授权登录</view>
+          <view class="summary">点授权即可同步头像、昵称和学习数据</view>
         </view>
       </view>
     </button>
-    <view class="upgrade-btn" bindtap="goShop" wx:if="{{membershipLabel === '普通用户'}}">开通会员 ›</view>
+    <view class="upgrade-btn" catchtap="goShop" wx:if="{{membershipLabel === '普通用户'}}">开通会员 ›</view>
   </view>
 
   <!-- 学习数据 -->
@@ -76,6 +77,30 @@
   </view>
 
   <view wx:if="{{isLoggedIn}}" class="logout-btn" bindtap="onLogout">退出登录</view>
+</view>
+
+<view wx:if="{{showProfileEditor}}" class="profile-mask" catchtouchmove="preventMove" bindtap="closeProfileEditor">
+  <view class="profile-editor" catchtap="preventMove">
+    <view class="editor-title">授权微信头像和昵称</view>
+    <view class="editor-desc">请点击头像选择「微信头像」，再点击输入框使用微信昵称</view>
+    <form bindsubmit="saveProfile">
+      <button class="avatar-picker" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image wx:if="{{editAvatarUrl}}" class="avatar-preview" src="{{editAvatarUrl}}" mode="aspectFill" />
+        <view wx:else class="avatar-placeholder">选头像</view>
+      </button>
+      <input
+        class="nickname-input"
+        type="nickname"
+        name="nickName"
+        maxlength="32"
+        value="{{editNickName}}"
+        placeholder="点击填写微信昵称"
+        bindblur="onNickNameBlur"
+      />
+      <button class="btn-primary editor-save" form-type="submit" loading="{{savingProfile}}" disabled="{{savingProfile}}">保存资料</button>
+    </form>
+    <view class="editor-cancel" bindtap="closeProfileEditor">稍后再说</view>
+  </view>
 </view>
 
 <tab-bar active="mine" />

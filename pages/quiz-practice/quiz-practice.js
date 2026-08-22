@@ -41,6 +41,18 @@ Page({
 
   onLoad(options) {
     this.options = options
+    if (config.useApi) {
+      auth
+        .requireLogin()
+        .then(() => this.loadQuestions(options))
+        .catch((err) => {
+          if (!err || err.code !== "LOGIN_CANCEL") {
+            wx.showToast({ title: (err && err.message) || "请先登录", icon: "none" })
+          }
+          setTimeout(() => wx.navigateBack(), 400)
+        })
+      return
+    }
     this.loadQuestions(options)
   },
 
@@ -307,14 +319,26 @@ Page({
     })
   },
 
+  buildRecordPayload(extra) {
+    const categoryId = parseInt((this.options && this.options.categoryId) || "", 10)
+    const subcategoryId = parseInt((this.options && this.options.subcategoryId) || "", 10)
+    return {
+      categoryId: Number.isFinite(categoryId) ? categoryId : null,
+      subcategoryId: Number.isFinite(subcategoryId) ? subcategoryId : null,
+      ...(extra || {})
+    }
+  },
+
   finishPractice() {
     const total = this.data.questions.length
-    saveRecord({
-      mode: this.data.mode,
-      total,
-      correct: this.correctCount,
-      score: Math.round((this.correctCount / total) * 100)
-    })
+    saveRecord(
+      this.buildRecordPayload({
+        mode: this.data.mode,
+        total,
+        correct: this.correctCount,
+        score: Math.round((this.correctCount / total) * 100)
+      })
+    )
     wx.redirectTo({
       url: `/pages/quiz-result/quiz-result?correct=${this.correctCount}&total=${total}&mode=${this.data.mode}`
     })
@@ -325,7 +349,15 @@ Page({
     const total = this.data.questions.length
     const elapsed = Math.round((Date.now() - this.startTime) / 1000)
     const score = Math.round((this.correctCount / total) * 100)
-    saveRecord({ mode: "mock", total, correct: this.correctCount, score, duration: elapsed })
+    saveRecord(
+      this.buildRecordPayload({
+        mode: "mock",
+        total,
+        correct: this.correctCount,
+        score,
+        duration: elapsed
+      })
+    )
     wx.redirectTo({
       url: `/pages/quiz-result/quiz-result?correct=${this.correctCount}&total=${total}&mode=mock&duration=${elapsed}&score=${score}`
     })

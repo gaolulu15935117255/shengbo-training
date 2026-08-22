@@ -25,7 +25,14 @@ const apiProductsRoutes = require('./routes/api/products');
 const app = express();
 
 app.use(cors());
+app.set('trust proxy', 1);
 app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
+
+const { router: apiPayRoutes, handlePayNotify } = require('./routes/api/pay');
+const { router: apiOrderRoutes } = require('./routes/api/orders');
+const apiUserRoutes = require('./routes/api/user');
+
+app.use('/api/pay/notify', express.raw({ type: '*/*' }), handlePayNotify);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -38,10 +45,18 @@ if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
 }
 
+if (!fs.existsSync(config.uploadDir)) {
+  fs.mkdirSync(config.uploadDir, { recursive: true });
+}
+app.use('/uploads', express.static(config.uploadDir));
+
 app.use('/api/auth', apiAuthRoutes);
 app.use('/api/quiz', apiQuizRoutes);
 app.use('/api/content', apiContentRoutes);
 app.use('/api/products', apiProductsRoutes);
+app.use('/api/orders', apiOrderRoutes);
+app.use('/api/pay', apiPayRoutes);
+app.use('/api/user', apiUserRoutes);
 
 app.use('/api/admin/auth', adminAuthRoutes);
 
@@ -77,7 +92,9 @@ app.use((err, _req, res, _next) => {
 });
 
 app.listen(config.port, () => {
-  console.log(`圣博培训 API 运行于 http://localhost:${config.port}`);
+  const wechatPay = require('./utils/wechatPay');
+  const payMode = wechatPay.isMockMode() ? '模拟支付（订单入云并开通权益）' : '微信支付 JSAPI';
+  console.log(`圣博培训 API 运行于 http://localhost:${config.port} · ${payMode}`);
 });
 
 module.exports = app;

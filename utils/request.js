@@ -68,8 +68,46 @@ function post(url, data) {
   return request({ url, method: "POST", data })
 }
 
+function put(url, data) {
+  return request({ url, method: "PUT", data })
+}
+
 function del(url) {
   return request({ url, method: "DELETE" })
 }
 
-module.exports = { request, get, post, del }
+function uploadFile(url, filePath, name = "file") {
+  if (!config.useApi) {
+    return Promise.reject(new Error("API 未启用"))
+  }
+  const token = storage.get(storage.KEYS.TOKEN, "")
+  return new Promise((resolve, reject) => {
+    wx.uploadFile({
+      url: `${config.baseUrl}${url}`,
+      filePath,
+      name,
+      header: token ? { Authorization: `Bearer ${token}` } : {},
+      success(res) {
+        let body = res.data
+        if (typeof body === "string") {
+          try {
+            body = JSON.parse(body)
+          } catch (e) {
+            reject(new Error("上传响应无效"))
+            return
+          }
+        }
+        if (body && body.code === 0) {
+          resolve(body.data)
+          return
+        }
+        reject(new Error((body && body.message) || "上传失败"))
+      },
+      fail(err) {
+        reject(new Error(mapNetworkError(err.errMsg)))
+      }
+    })
+  })
+}
+
+module.exports = { request, get, post, put, del, uploadFile }

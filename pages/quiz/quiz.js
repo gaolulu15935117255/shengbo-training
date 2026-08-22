@@ -5,7 +5,8 @@ const {
   getFavoriteIds,
   getRecords,
   syncWrongIds,
-  syncFavoriteIds
+  syncFavoriteIds,
+  syncRecords
 } = require("../../utils/quiz")
 const { quizApi } = require("../../utils/api")
 const auth = require("../../utils/auth")
@@ -39,7 +40,11 @@ Page({
       const s = stats || getQuizStats()
       this.setData({
         stats: s,
-        accuracy: s.totalAnswered ? Math.round((s.totalCorrect / s.totalAnswered) * 100) : 0,
+        accuracy: s.accuracy != null
+          ? s.accuracy
+          : s.totalAnswered && s.totalCorrect
+            ? Math.round((s.totalCorrect / s.totalAnswered) * 100)
+            : 0,
         wrongCount: getWrongIds().length,
         favoriteCount: getFavoriteIds().length,
         recordCount: getRecords().length,
@@ -74,12 +79,13 @@ Page({
       loadCategories(),
       syncWrongIds().catch(() => {}),
       syncFavoriteIds().catch(() => {}),
+      syncRecords().catch(() => {}),
       config.useApi && auth.getToken()
         ? auth.refreshProfile().then((user) => user && user.stats).catch(() => null)
         : Promise.resolve(null)
     ])
       .then((results) => {
-        const profileStats = results[3]
+        const profileStats = results[4]
         applyStats(profileStats)
       })
       .catch((err) => {
@@ -101,6 +107,15 @@ Page({
   goMode(e) {
     const mode = e.currentTarget.dataset.mode
     const url = MODE_ROUTES[mode]
-    if (url) wx.navigateTo({ url })
+    if (!url) return
+    auth
+      .requireLogin()
+      .then(() => {
+        wx.navigateTo({ url })
+      })
+      .catch((err) => {
+        if (err && err.code === "LOGIN_CANCEL") return
+        wx.showToast({ title: (err && err.message) || "请先登录", icon: "none" })
+      })
   }
 })

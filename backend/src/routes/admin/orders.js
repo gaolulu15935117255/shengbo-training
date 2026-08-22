@@ -1,7 +1,8 @@
 const express = require('express');
-const { v4: uuidv4 } = require('uuid');
 const pool = require('../../db/pool');
 const { success, fail, paginate, parsePagination } = require('../../utils/response');
+const wechatPay = require('../../utils/wechatPay');
+const orderService = require('../../services/orderService');
 
 const router = express.Router();
 
@@ -30,13 +31,14 @@ function mapOrder(row) {
     remark: row.remark,
     createdAt: row.created_at,
     nickName: row.nick_name,
+    userNickName: row.nick_name,
   };
 }
 
 router.get('/', async (req, res) => {
   try {
     const { page, pageSize, offset } = parsePagination(req.query);
-    const { status, keyword, userId } = req.query;
+    const { status, keyword, userId, orderNo } = req.query;
     const conditions = ['1=1'];
     const params = [];
 
@@ -48,9 +50,10 @@ router.get('/', async (req, res) => {
       conditions.push('o.user_id = ?');
       params.push(userId);
     }
-    if (keyword) {
+    const search = keyword || orderNo;
+    if (search) {
       conditions.push('(o.order_no LIKE ? OR o.product_title LIKE ?)');
-      const kw = `%${keyword}%`;
+      const kw = `%${search}%`;
       params.push(kw, kw);
     }
 
@@ -107,50 +110,69 @@ router.get('/:orderNo', async (req, res) => {
 });
 
 router.post('/:orderNo/refund', async (req, res) => {
-  const conn = await pool.getConnection();
   try {
     const { reason, amount } = req.body || {};
     const orderNo = req.params.orderNo;
 
-    const [orders] = await conn.query('SELECT * FROM orders WHERE order_no = ? FOR UPDATE', [orderNo]);
+    const [orders] = await pool.query('SELECT * FROM orders WHERE order_no = ?', [orderNo]);
     if (!orders.length) return fail(res, 40400, '订单不存在');
-
     const order = orders[0];
     if (order.status !== 'paid') {
       return fail(res, 60003, '订单状态不允许操作');
     }
 
-    const refundAmount = amount || order.amount;
-    const refundNo = `RF${Date.now()}${uuidv4().slice(0, 6).toUpperCase()}`;
-
-    await conn.beginTransaction();
-
-    await conn.query(
-      `INSERT INTO refund_records (order_id, refund_no, amount, reason, operator_id, status, refunded_at)
-       VALUES (?, ?, ?, ?, ?, 'success', NOW())`,
-      [order.id, refundNo, refundAmount, reason || '管理员退款', req.admin.id]
-    );
-
-    await conn.query(
-      "UPDATE orders SET status = 'refunded', refunded_at = NOW() WHERE id = ?",
+    const [payments] = await pool.query(
+      "SELECT transaction_id, pay_channel FROM order_payments WHERE order_id = ? AND status = 'success' ORDER BY id DESC LIMIT 1",
       [order.id]
     );
+    const payment = payments[0];
+    const transactionId = payment && payment.transaction_id;
+    const isMockPay =
+      wechatPay.isMockMode() ||
+      (transactionId && String(transactionId).startsWith('mock_')) ||
+      (payment && payment.pay_channel === 'mock');
 
-    await conn.commit();
+    if (!isMockPay) {
+      if (!wechatPay.isConfigured()) {
+        return fail(res, 60002, '未配置微信支付，无法原路退款');
+      }
+      try {
+        await wechatPay.createRefund({
+          refundNo: `RF${Date.now()}${String(order.id).padStart(6, '0')}`.slice(0, 32),
+          orderNo: order.order_no,
+          transactionId: transactionId && !String(transactionId).startsWith('mock_') ? transactionId : null,
+          refundFen: amount || order.amount,
+          totalFen: order.amount,
+          reason: reason || '管理员退款',
+        });
+      } catch (wxErr) {
+        const detail = JSON.stringify((wxErr && wxErr.wx) || wxErr.message || '');
+        if (!/已退款|已全额退款/.test(detail)) {
+          console.error('[refund] wechat', wxErr.wx || wxErr);
+          return fail(res, 60002, wxErr.message || '微信退款失败');
+        }
+      }
+    }
+
+    const result = await orderService.refundPaidOrder(orderNo, {
+      reason,
+      amount,
+      operatorId: req.admin.id,
+      transactionId,
+    });
 
     return success(res, {
-      refundNo,
+      refundNo: result.refundNo,
       orderNo,
-      amount: refundAmount,
+      amount: result.refundAmount,
       status: 'success',
-      message: '退款已受理（stub，未对接微信支付退款 API）',
+      message: isMockPay ? '已退款并收回权益（模拟支付）' : '已退款并收回权益',
     });
   } catch (err) {
-    await conn.rollback();
+    if (err.code === 40400) return fail(res, 40400, err.message);
+    if (err.code === 60003) return fail(res, 60003, err.message);
     console.error(err);
     return fail(res, 50000, '服务器内部错误', null, 500);
-  } finally {
-    conn.release();
   }
 });
 

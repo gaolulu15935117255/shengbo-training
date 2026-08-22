@@ -160,7 +160,7 @@ Page({
     wx.openLocation({
       latitude: contact.latitude,
       longitude: contact.longitude,
-      name: "圣博培训基地",
+      name: "圣博职业技能培训中心",
       address: contact.address
     })
   }

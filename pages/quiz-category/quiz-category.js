@@ -2,6 +2,7 @@ const { practiceModes } = require("../../data/questions")
 const { quizApi } = require("../../utils/api")
 const { hasSubcategoryAccess } = require("../../utils/permission")
 const config = require("../../config/api")
+const auth = require("../../utils/auth")
 
 Page({
   data: {
@@ -81,9 +82,7 @@ Page({
       this.showUnlockTip()
       return
     }
-    wx.navigateTo({
-      url: `/pages/quiz-practice/quiz-practice?mode=chapter&subcategoryId=${sub.id}&categoryId=${this.data.category.id}`
-    })
+    this.startPractice(`/pages/quiz-practice/quiz-practice?mode=chapter&subcategoryId=${sub.id}&categoryId=${this.data.category.id}`)
   },
 
   startMode(e) {
@@ -92,9 +91,19 @@ Page({
       this.showUnlockTip()
       return
     }
-    wx.navigateTo({
-      url: `/pages/quiz-practice/quiz-practice?mode=${mode}&categoryId=${this.data.category.id}`
-    })
+    this.startPractice(`/pages/quiz-practice/quiz-practice?mode=${mode}&categoryId=${this.data.category.id}`)
+  },
+
+  startPractice(url) {
+    auth
+      .requireLogin()
+      .then(() => {
+        wx.navigateTo({ url })
+      })
+      .catch((err) => {
+        if (err && err.code === "LOGIN_CANCEL") return
+        wx.showToast({ title: (err && err.message) || "请先登录", icon: "none" })
+      })
   },
 
   showUnlockTip() {

@@ -1,6 +1,6 @@
 const express = require('express');
 const pool = require('../../db/pool');
-const { success, fail } = require('../../utils/response');
+const { success, fail, paginate, parsePagination } = require('../../utils/response');
 const { optionalUserAuth, userAuth } = require('../../middleware/auth');
 
 const router = express.Router();
@@ -341,6 +341,98 @@ router.post('/favorites/:questionId', userAuth, async (req, res) => {
       questionId,
     ]);
     return success(res, { favorited: true });
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+const MODE_LABELS = {
+  chapter: '章节练习',
+  special: '专项刷题',
+  mock: '模拟考试',
+  wrong: '错题重做',
+  favorite: '收藏练习',
+};
+
+function parseOptionalId(value) {
+  const id = parseInt(value, 10);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+router.get('/records', userAuth, async (req, res) => {
+  try {
+    const { page, pageSize, offset } = parsePagination(req.query);
+    const [[{ total }]] = await pool.query(
+      'SELECT COUNT(*) AS total FROM quiz_records WHERE user_id = ?',
+      [req.user.id]
+    );
+    const [rows] = await pool.query(
+      'SELECT id, mode, category_id, subcategory_id, total_count, correct_count, score, duration_sec, created_at FROM quiz_records WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+      [req.user.id, pageSize, offset]
+    );
+
+    return success(
+      res,
+      paginate(
+        rows.map((row) => ({
+          id: row.id,
+          mode: row.mode,
+          modeLabel: MODE_LABELS[row.mode] || row.mode,
+          categoryId: row.category_id,
+          subcategoryId: row.subcategory_id,
+          total: row.total_count,
+          correct: row.correct_count,
+          score: row.score,
+          duration: row.duration_sec,
+          time: row.created_at,
+          createdAt: row.created_at,
+        })),
+        page,
+        pageSize,
+        total
+      )
+    );
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.post('/records', userAuth, async (req, res) => {
+  try {
+    const body = req.body || {};
+    const mode = String(body.mode || '').trim();
+    const totalCount = parseInt(body.totalCount, 10);
+    const correctCount = parseInt(body.correctCount, 10);
+    const score = parseInt(body.score, 10);
+    const durationSec = body.durationSec == null ? null : parseInt(body.durationSec, 10);
+
+    if (!mode) return fail(res, 40001, 'mode 不能为空');
+    if (!Number.isFinite(totalCount) || totalCount < 0) return fail(res, 40001, 'totalCount 无效');
+    if (!Number.isFinite(correctCount) || correctCount < 0) return fail(res, 40001, 'correctCount 无效');
+
+    const categoryId = parseOptionalId(body.categoryId);
+    const subcategoryId = parseOptionalId(body.subcategoryId);
+    const safeScore = Number.isFinite(score) ? Math.min(100, Math.max(0, score)) : 0;
+    const safeDuration = Number.isFinite(durationSec) && durationSec >= 0 ? durationSec : null;
+
+    const [result] = await pool.query(
+      `INSERT INTO quiz_records (user_id, mode, category_id, subcategory_id, total_count, correct_count, score, duration_sec)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [req.user.id, mode.slice(0, 16), categoryId, subcategoryId, totalCount, correctCount, safeScore, safeDuration]
+    );
+
+    if (mode === 'mock') {
+      await pool.query(
+        `INSERT INTO user_stats (user_id, exam_high_score, last_study_date)
+         VALUES (?, ?, CURDATE())
+         ON DUPLICATE KEY UPDATE exam_high_score = GREATEST(exam_high_score, VALUES(exam_high_score))`,
+        [req.user.id, safeScore]
+      );
+    }
+
+    return success(res, { id: result.insertId });
   } catch (err) {
     console.error(err);
     return fail(res, 50000, '服务器内部错误', null, 500);

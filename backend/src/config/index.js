@@ -28,9 +28,23 @@ module.exports = {
 
   adminStaticDir: process.env.ADMIN_STATIC_DIR || null,
   uploadDir: process.env.UPLOAD_DIR || require('path').join(__dirname, '../uploads'),
+  publicBaseUrl: (
+    process.env.PUBLIC_BASE_URL ||
+    (process.env.NODE_ENV === 'production' ? 'https://api.yanmakeji.top' : '')
+  ).replace(/\/$/, ''),
 
   wechat: {
     appId: process.env.WECHAT_APPID || 'wxa13bf3f00f8cb4d8',
     appSecret: process.env.WECHAT_APP_SECRET || process.env.WECHAT_SECRET || '',
+  },
+
+  wechatPay: {
+    mchId: process.env.WECHAT_MCH_ID || '',
+    serialNo: process.env.WECHAT_MCH_SERIAL_NO || '',
+    privateKey: process.env.WECHAT_MCH_PRIVATE_KEY || '',
+    privateKeyPath: process.env.WECHAT_MCH_PRIVATE_KEY_PATH || '',
+    apiV3Key: process.env.WECHAT_PAY_API_V3_KEY || '',
+    notifyUrl: process.env.WECHAT_PAY_NOTIFY_URL || '',
+    mock: String(process.env.WECHAT_PAY_MOCK || '').toLowerCase() === 'true',
   },
 };

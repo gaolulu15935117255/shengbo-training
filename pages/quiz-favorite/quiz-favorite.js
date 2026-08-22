@@ -44,6 +44,15 @@ Page({
       wx.showToast({ title: "暂无收藏", icon: "none" })
       return
     }
-    wx.navigateTo({ url: "/pages/quiz-practice/quiz-practice?mode=favorite" })
+    const auth = require("../../utils/auth")
+    auth
+      .requireLogin()
+      .then(() => {
+        wx.navigateTo({ url: "/pages/quiz-practice/quiz-practice?mode=favorite" })
+      })
+      .catch((err) => {
+        if (err && err.code === "LOGIN_CANCEL") return
+        wx.showToast({ title: (err && err.message) || "请先登录", icon: "none" })
+      })
   }
 })

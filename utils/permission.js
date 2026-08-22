@@ -1,5 +1,5 @@
 const config = require("../config/api")
-const { productsApi } = require("./api")
+const { productsApi, userApi } = require("./api")
 const storage = require("./storage")
 const auth = require("./auth")
 
@@ -61,6 +61,8 @@ function getMembershipExpireText() {
 }
 
 function hasPurchased(productId) {
+  const user = auth.getUser()
+  if (user && user.unlockAll) return true
   return getPurchasedIds().includes(productId)
 }
 
@@ -99,14 +101,33 @@ function syncPurchasedFromApi() {
   if (!config.useApi || !auth.getToken()) {
     return Promise.resolve(getPurchasedIds())
   }
-  return productsApi.list({ page: 1, pageSize: 100 }).then((data) => {
-    const purchased = (data.list || [])
-      .filter((item) => item.purchased)
-      .map((item) => item.productCode)
-    storage.set(storage.KEYS.PURCHASED, purchased)
-    syncGlobalData()
-    return purchased
-  })
+  return userApi
+    .entitlements()
+    .then((data) => {
+      const purchased = data.purchasedProductIds || []
+      storage.set(storage.KEYS.PURCHASED, purchased)
+      const user = auth.getUser()
+      if (user) {
+        auth.setUser({
+          ...user,
+          membershipLabel: data.membershipLabel || user.membershipLabel || "普通用户",
+          membershipExpire: data.membershipExpireAt || null,
+          unlockAll: !!data.unlockAll
+        })
+      }
+      syncGlobalData()
+      return purchased
+    })
+    .catch(() => {
+      return productsApi.list({ page: 1, pageSize: 100 }).then((data) => {
+        const purchased = (data.list || [])
+          .filter((item) => item.purchased)
+          .map((item) => item.productCode)
+        storage.set(storage.KEYS.PURCHASED, purchased)
+        syncGlobalData()
+        return purchased
+      })
+    })
 }
 
 function syncGlobalData() {

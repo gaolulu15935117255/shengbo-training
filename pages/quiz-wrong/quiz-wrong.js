@@ -44,7 +44,16 @@ Page({
       wx.showToast({ title: "暂无错题", icon: "none" })
       return
     }
-    wx.navigateTo({ url: "/pages/quiz-practice/quiz-practice?mode=wrong" })
+    const auth = require("../../utils/auth")
+    auth
+      .requireLogin()
+      .then(() => {
+        wx.navigateTo({ url: "/pages/quiz-practice/quiz-practice?mode=wrong" })
+      })
+      .catch((err) => {
+        if (err && err.code === "LOGIN_CANCEL") return
+        wx.showToast({ title: (err && err.message) || "请先登录", icon: "none" })
+      })
   },
 
   clearAll() {

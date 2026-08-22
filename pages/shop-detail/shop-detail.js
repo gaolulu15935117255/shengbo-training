@@ -1,6 +1,7 @@
 const { productsApi } = require("../../utils/api")
 const { hasPurchased, syncPurchasedFromApi } = require("../../utils/permission")
 const { mockPay } = require("../../utils/order")
+const { payProduct } = require("../../utils/pay")
 const config = require("../../config/api")
 
 function mapProduct(item) {
@@ -16,7 +17,8 @@ function mapProduct(item) {
       : item.originalPrice,
     benefits: item.benefits || [],
     target: item.target || item.targetAudience || "",
-    purchased: !!item.purchased
+    purchased: !!item.purchased,
+    rating: item.rating
   }
 }
 
@@ -24,7 +26,8 @@ Page({
   data: {
     product: null,
     purchased: false,
-    loading: true
+    loading: true,
+    paying: false
   },
 
   onLoad(options) {
@@ -78,18 +81,16 @@ Page({
       return
     }
     syncPurchasedFromApi().then(() => {
-      const purchased = require("../../utils/permission").getPurchasedIds()
-      this.setData({
-        purchased:
-          purchased.includes(this.data.product.id) ||
-          purchased.includes(this.data.product.productCode)
-      })
-    })
+      return productsApi.detail(this.productCode)
+    }).then((item) => {
+      if (!item) return
+      this.setData({ purchased: !!item.purchased })
+    }).catch(() => {})
   },
 
   buyNow() {
     const product = this.data.product
-    if (!product) return
+    if (!product || this.data.paying) return
     if (this.data.purchased) {
       wx.showToast({ title: "您已购买", icon: "none" })
       return
@@ -98,17 +99,32 @@ Page({
     wx.showModal({
       title: "确认购买",
       content: `确定购买「${product.title}」？价格 ¥${product.price}`,
-      confirmText: config.useApi ? "暂不支持在线支付" : "模拟支付",
+      confirmText: "立即支付",
       success: (res) => {
         if (!res.confirm) return
-        if (config.useApi) {
-          wx.showToast({ title: "支付接口开发中", icon: "none" })
+        if (!config.useApi) {
+          mockPay(product)
+          getApp().refreshUserData()
+          this.setData({ purchased: true })
+          wx.showToast({ title: "购买成功，权限已开通", icon: "success" })
           return
         }
-        mockPay(product)
-        getApp().refreshUserData()
-        this.setData({ purchased: true })
-        wx.showToast({ title: "购买成功，权限已开通", icon: "success" })
+        this.setData({ paying: true })
+        payProduct(product.productCode || product.id)
+          .then(() => {
+            this.setData({ purchased: true })
+            wx.showToast({ title: "购买成功，权限已开通", icon: "success" })
+          })
+          .catch((err) => {
+            if (err && (err.code === "PAY_CANCEL" || err.code === "LOGIN_CANCEL" || err.code === "AUTH_CANCEL")) {
+              wx.showToast({ title: err.message || "已取消", icon: "none" })
+              return
+            }
+            wx.showToast({ title: (err && err.message) || "支付失败", icon: "none" })
+          })
+          .finally(() => {
+            this.setData({ paying: false })
+          })
       }
     })
   },

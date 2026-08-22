@@ -1,16 +1,67 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
 const pool = require('../../db/pool');
 const { signUserToken, getExpiresInSeconds, hashToken } = require('../../utils/jwt');
 const { code2Session } = require('../../utils/wechat');
 const config = require('../../config');
 const { success, fail } = require('../../utils/response');
 const { userAuth } = require('../../middleware/auth');
+const { toPublicUrl, sanitizeNickName, sanitizeAvatarUrl, sanitizeGender } = require('../../utils/publicUrl');
 
 const router = express.Router();
 
+const avatarDir = path.join(config.uploadDir, 'avatars');
+if (!fs.existsSync(avatarDir)) {
+  fs.mkdirSync(avatarDir, { recursive: true });
+}
+
+const avatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: avatarDir,
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname || '').toLowerCase() || '.jpg';
+      const safeExt = ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext) ? ext : '.jpg';
+      cb(null, `${Date.now()}_${uuidv4().replace(/-/g, '').slice(0, 12)}${safeExt}`);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/octet-stream'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('仅支持 jpg/png/webp 头像'));
+  },
+});
+
+const MEMBERSHIP_LABELS = { month: '月度会员', year: '年度会员', lifetime: '终身会员' };
+
+async function getActiveMembership(userId) {
+  const [memberships] = await pool.query(
+    'SELECT level, expire_at FROM user_memberships WHERE user_id = ? AND status = 1 AND (expire_at IS NULL OR expire_at > NOW()) ORDER BY id DESC LIMIT 1',
+    [userId]
+  );
+  return memberships[0] || null;
+}
+
+function mapLoginUser(userId, userRow, membership) {
+  return {
+    id: userId,
+    nickName: userRow.nick_name,
+    avatarUrl: userRow.avatar_url,
+    gender: userRow.gender || 0,
+    membershipLabel: membership ? MEMBERSHIP_LABELS[membership.level] || '会员' : '普通用户',
+    membershipExpire: membership?.expire_at || null,
+  };
+}
+
 router.post('/login', async (req, res) => {
   try {
-    const { code, nickName, avatarUrl } = req.body || {};
+    const { code } = req.body || {};
+    const nickName = sanitizeNickName(req.body && req.body.nickName);
+    const avatarUrl = sanitizeAvatarUrl(req.body && req.body.avatarUrl);
+    const gender = sanitizeGender(req.body && req.body.gender);
     if (!code) {
       return fail(res, 40001, 'code 不能为空');
     }
@@ -27,7 +78,7 @@ router.post('/login', async (req, res) => {
     let userId;
 
     const [existing] = await pool.query(
-      'SELECT id, nick_name, avatar_url, status FROM users WHERE openid = ? AND deleted_at IS NULL',
+      'SELECT id, nick_name, avatar_url, gender, status FROM users WHERE openid = ? AND deleted_at IS NULL',
       [openid]
     );
 
@@ -37,13 +88,13 @@ router.post('/login', async (req, res) => {
         return fail(res, 40300, '账号已被禁用');
       }
       await pool.query(
-        'UPDATE users SET nick_name = COALESCE(?, nick_name), avatar_url = COALESCE(?, avatar_url), unionid = COALESCE(?, unionid), last_login_at = NOW() WHERE id = ?',
-        [nickName || null, avatarUrl || null, unionid, userId]
+        'UPDATE users SET nick_name = COALESCE(?, nick_name), avatar_url = COALESCE(?, avatar_url), gender = COALESCE(?, gender), unionid = COALESCE(?, unionid), last_login_at = NOW() WHERE id = ?',
+        [nickName, avatarUrl, gender, unionid, userId]
       );
     } else {
       const [result] = await pool.query(
-        'INSERT INTO users (openid, unionid, nick_name, avatar_url, last_login_at) VALUES (?, ?, ?, ?, NOW())',
-        [openid, unionid, nickName || '微信用户', avatarUrl || null]
+        'INSERT INTO users (openid, unionid, nick_name, avatar_url, gender, last_login_at) VALUES (?, ?, ?, ?, ?, NOW())',
+        [openid, unionid, nickName || '微信用户', avatarUrl, gender || 0]
       );
       userId = result.insertId;
       await pool.query('INSERT INTO user_stats (user_id) VALUES (?)', [userId]);
@@ -58,26 +109,13 @@ router.post('/login', async (req, res) => {
       [userId, hashToken(token), expiresAt, 'miniapp']
     );
 
-    const [memberships] = await pool.query(
-      'SELECT level, expire_at FROM user_memberships WHERE user_id = ? AND status = 1 AND (expire_at IS NULL OR expire_at > NOW()) ORDER BY id DESC LIMIT 1',
-      [userId]
-    );
-
-    const membershipLabels = { month: '月度会员', year: '年度会员', lifetime: '终身会员' };
-    const membership = memberships[0];
-
-    const [userRows] = await pool.query('SELECT nick_name, avatar_url FROM users WHERE id = ?', [userId]);
+    const membership = await getActiveMembership(userId);
+    const [userRows] = await pool.query('SELECT nick_name, avatar_url, gender FROM users WHERE id = ?', [userId]);
 
     return success(res, {
       token,
       expiresIn,
-      user: {
-        id: userId,
-        nickName: userRows[0].nick_name,
-        avatarUrl: userRows[0].avatar_url,
-        membershipLabel: membership ? membershipLabels[membership.level] || '会员' : '普通用户',
-        membershipExpire: membership?.expire_at || null,
-      },
+      user: mapLoginUser(userId, userRows[0], membership),
     });
   } catch (err) {
     console.error(err);
@@ -89,7 +127,7 @@ router.get('/profile', userAuth, async (req, res) => {
   try {
     const userId = req.user.id;
     const [users] = await pool.query(
-      'SELECT id, nick_name, avatar_url FROM users WHERE id = ?',
+      'SELECT id, nick_name, avatar_url, gender FROM users WHERE id = ?',
       [userId]
     );
     const [memberships] = await pool.query(
@@ -98,7 +136,6 @@ router.get('/profile', userAuth, async (req, res) => {
     );
     const [stats] = await pool.query('SELECT * FROM user_stats WHERE user_id = ?', [userId]);
 
-    const membershipLabels = { month: '月度会员', year: '年度会员', lifetime: '终身会员' };
     const m = memberships[0];
     const s = stats[0] || { total_answered: 0, total_correct: 0, exam_high_score: 0, study_days: 0 };
 
@@ -106,10 +143,11 @@ router.get('/profile', userAuth, async (req, res) => {
       id: users[0].id,
       nickName: users[0].nick_name,
       avatarUrl: users[0].avatar_url,
+      gender: users[0].gender || 0,
       membership: m
         ? {
             level: m.level,
-            label: membershipLabels[m.level] || m.level,
+            label: MEMBERSHIP_LABELS[m.level] || m.level,
             expireAt: m.expire_at,
             isActive: true,
           }
@@ -125,6 +163,49 @@ router.get('/profile', userAuth, async (req, res) => {
     console.error(err);
     return fail(res, 50000, '服务器内部错误', null, 500);
   }
+});
+
+router.put('/profile', userAuth, async (req, res) => {
+  try {
+    const nickName = sanitizeNickName(req.body && req.body.nickName);
+    const avatarUrl = sanitizeAvatarUrl(req.body && req.body.avatarUrl);
+    const gender = sanitizeGender(req.body && req.body.gender);
+    if (!nickName && !avatarUrl && gender == null) {
+      return fail(res, 40001, '请提供昵称或头像');
+    }
+
+    await pool.query(
+      'UPDATE users SET nick_name = COALESCE(?, nick_name), avatar_url = COALESCE(?, avatar_url), gender = COALESCE(?, gender) WHERE id = ?',
+      [nickName, avatarUrl, gender, req.user.id]
+    );
+
+    const [userRows] = await pool.query('SELECT nick_name, avatar_url, gender FROM users WHERE id = ?', [req.user.id]);
+    const membership = await getActiveMembership(req.user.id);
+    return success(res, mapLoginUser(req.user.id, userRows[0], membership));
+  } catch (err) {
+    console.error(err);
+    return fail(res, 50000, '服务器内部错误', null, 500);
+  }
+});
+
+router.post('/avatar', userAuth, (req, res) => {
+  avatarUpload.single('file')(req, res, async (err) => {
+    if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE' ? '头像不能超过 2MB' : err.message || '头像上传失败';
+      return fail(res, 40001, message);
+    }
+    try {
+      if (!req.file) {
+        return fail(res, 40001, '请选择头像文件');
+      }
+      const avatarUrl = toPublicUrl(req, `/uploads/avatars/${req.file.filename}`);
+      await pool.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, req.user.id]);
+      return success(res, { avatarUrl });
+    } catch (uploadErr) {
+      console.error(uploadErr);
+      return fail(res, 50000, '服务器内部错误', null, 500);
+    }
+  });
 });
 
 router.post('/logout', userAuth, async (req, res) => {

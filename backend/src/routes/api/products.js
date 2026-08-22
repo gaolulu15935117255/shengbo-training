@@ -45,15 +45,21 @@ router.get('/', optionalUserAuth, async (req, res) => {
     );
 
     let purchasedCodes = new Set();
+    let unlockAll = false;
     if (req.user) {
       const [orders] = await pool.query(
         "SELECT DISTINCT p.product_code FROM orders o JOIN products p ON p.id = o.product_id WHERE o.user_id = ? AND o.status = 'paid'",
         [req.user.id]
       );
       purchasedCodes = new Set(orders.map((o) => o.product_code));
+      const [allEnt] = await pool.query(
+        "SELECT 1 FROM user_entitlements WHERE user_id = ? AND status = 1 AND entitlement_type = 'all' AND (expire_at IS NULL OR expire_at > NOW()) LIMIT 1",
+        [req.user.id]
+      );
+      unlockAll = allEnt.length > 0;
     }
 
-    const list = rows.map((r) => mapProduct(r, purchasedCodes.has(r.product_code)));
+    const list = rows.map((r) => mapProduct(r, unlockAll || purchasedCodes.has(r.product_code)));
     return success(res, paginate(list, page, pageSize, total));
   } catch (err) {
     console.error(err);
@@ -75,7 +81,11 @@ router.get('/:productCode', optionalUserAuth, async (req, res) => {
         "SELECT 1 FROM orders o JOIN products p ON p.id = o.product_id WHERE o.user_id = ? AND p.product_code = ? AND o.status = 'paid' LIMIT 1",
         [req.user.id, req.params.productCode]
       );
-      purchased = orders.length > 0;
+      const [allEnt] = await pool.query(
+        "SELECT 1 FROM user_entitlements WHERE user_id = ? AND status = 1 AND entitlement_type = 'all' AND (expire_at IS NULL OR expire_at > NOW()) LIMIT 1",
+        [req.user.id]
+      );
+      purchased = orders.length > 0 || allEnt.length > 0;
     }
 
     const item = mapProduct(rows[0], purchased);

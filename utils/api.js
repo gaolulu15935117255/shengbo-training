@@ -1,4 +1,4 @@
-const { get, post, del } = require("./request")
+const { get, post, put, del, uploadFile } = require("./request")
 
 const authApi = {
   login(data) {
@@ -6,6 +6,12 @@ const authApi = {
   },
   profile() {
     return get("/api/auth/profile")
+  },
+  updateProfile(data) {
+    return put("/api/auth/profile", data)
+  },
+  uploadAvatar(filePath) {
+    return uploadFile("/api/auth/avatar", filePath, "file")
   },
   logout() {
     return post("/api/auth/logout")
@@ -48,6 +54,12 @@ const quizApi = {
   },
   toggleFavorite(questionId) {
     return post(`/api/quiz/favorites/${questionId}`)
+  },
+  records(params) {
+    return get("/api/quiz/records", params)
+  },
+  saveRecord(data) {
+    return post("/api/quiz/records", data)
   }
 }
 
@@ -60,4 +72,31 @@ const productsApi = {
   }
 }
 
-module.exports = { authApi, contentApi, quizApi, productsApi }
+const ordersApi = {
+  create(data) {
+    return post("/api/orders/create", data)
+  },
+  list(params) {
+    return get("/api/orders", params)
+  },
+  status(orderNo) {
+    return get(`/api/orders/${orderNo}/status`)
+  },
+  repay(orderNo) {
+    return post(`/api/orders/${orderNo}/repay`)
+  }
+}
+
+const payApi = {
+  prepay(data) {
+    return post("/api/pay/prepay", data)
+  }
+}
+
+const userApi = {
+  entitlements() {
+    return get("/api/user/entitlements")
+  }
+}
+
+module.exports = { authApi, contentApi, quizApi, productsApi, ordersApi, payApi, userApi }

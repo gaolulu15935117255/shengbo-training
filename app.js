@@ -21,6 +21,7 @@ App({
     if (config.useApi && auth.getToken()) {
       auth.refreshProfile().catch(() => {})
       permission.syncPurchasedFromApi().catch(() => {})
+      require("./utils/quiz").syncAllUserData().catch(() => {})
     }
   },
 
@@ -39,6 +40,7 @@ App({
     if (config.useApi && auth.getToken()) {
       auth.refreshProfile().catch(() => {})
       permission.syncPurchasedFromApi().catch(() => {})
+      require("./utils/quiz").syncAllUserData().catch(() => {})
     }
   }
 })

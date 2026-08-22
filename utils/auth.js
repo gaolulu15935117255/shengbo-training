@@ -20,6 +20,42 @@ function isLoggedIn() {
   return !!getToken() && !!getUser()
 }
 
+function needsProfile(user) {
+  const current = user || getUser()
+  if (!current) return true
+  const nick = (current.nickName || "").trim()
+  return !current.avatarUrl || !nick || nick === "微信用户" || isAnonymousProfile(current)
+}
+
+function isAnonymousProfile(info) {
+  if (!info) return true
+  const nick = String(info.nickName || "").trim()
+  const avatar = String(info.avatarUrl || "")
+  if (!nick || nick === "微信用户") return true
+  if (!avatar) return true
+  if (avatar.indexOf("icTdbqWNOwNRna42FI242Lcia07jQodd2FJGIYQfG0LAJGFxM4FbnQP6yfMxBgJ0F3YRqJCJ1aPAK2dQagdusBZg") !== -1) {
+    return true
+  }
+  return false
+}
+
+function applyServerUser(data, extra) {
+  const prev = getUser() || {}
+  const user = {
+    ...prev,
+    id: data.id,
+    nickName: data.nickName,
+    avatarUrl: data.avatarUrl || "",
+    gender: data.gender != null ? data.gender : prev.gender,
+    membershipLabel: data.membershipLabel || prev.membershipLabel || "普通用户",
+    membershipExpire: data.membershipExpire !== undefined ? data.membershipExpire : prev.membershipExpire,
+    loginTime: prev.loginTime || Date.now(),
+    ...(extra || {})
+  }
+  setUser(user)
+  return user
+}
+
 function wxLogin() {
   return new Promise((resolve, reject) => {
     wx.login({
@@ -32,37 +68,129 @@ function wxLogin() {
   })
 }
 
-function loginWithWechat() {
-  if (!config.useApi) {
-    return wxLogin().then((code) => {
-      const user = {
-        nickName: "微信用户",
-        avatarUrl: "",
-        wxCode: code,
-        loginTime: Date.now()
+function syncQuizAfterLogin() {
+  try {
+    const quiz = require("./quiz")
+    if (quiz.syncAllUserData) {
+      return quiz.syncAllUserData().catch(() => {})
+    }
+  } catch (e) {
+    // ignore circular load
+  }
+  return Promise.resolve()
+}
+
+function requestWeChatProfile() {
+  return new Promise((resolve, reject) => {
+    const fail = (err) => {
+      const msg = (err && (err.errMsg || err.message)) || ""
+      if (msg.indexOf("cancel") !== -1 || msg.indexOf("deny") !== -1) {
+        const cancel = new Error("您取消了授权")
+        cancel.code = "AUTH_CANCEL"
+        reject(cancel)
+        return
       }
-      setUser(user)
-      initDefaultMessages()
-      return user
+      reject(err || new Error("未获得微信授权"))
+    }
+
+    if (typeof wx.getUserProfile === "function") {
+      wx.getUserProfile({
+        desc: "用于完善会员头像和昵称",
+        success(res) {
+          resolve(res.userInfo || {})
+        },
+        fail
+      })
+      return
+    }
+
+    wx.getUserInfo({
+      success(res) {
+        resolve(res.userInfo || {})
+      },
+      fail
     })
+  })
+}
+
+function completeLogin(code, profile) {
+  const info = profile || {}
+  const nickName = info.nickName
+  const avatarUrl = info.avatarUrl
+  const gender = info.gender
+
+  if (!config.useApi) {
+    const user = {
+      nickName: nickName || "微信用户",
+      avatarUrl: avatarUrl || "",
+      gender: gender || 0,
+      wxCode: code,
+      loginTime: Date.now()
+    }
+    setUser(user)
+    initDefaultMessages()
+    return Promise.resolve(user)
   }
 
-  return wxLogin()
-    .then((code) => authApi.login({ code }))
-    .then((data) => {
-      storage.set(storage.KEYS.TOKEN, data.token)
-      const user = {
-        id: data.user.id,
-        nickName: data.user.nickName,
-        avatarUrl: data.user.avatarUrl || "",
-        membershipLabel: data.user.membershipLabel,
-        membershipExpire: data.user.membershipExpire,
-        loginTime: Date.now()
-      }
-      setUser(user)
-      initDefaultMessages()
-      return user
+  return authApi.login({ code, nickName, avatarUrl, gender }).then((data) => {
+    storage.set(storage.KEYS.TOKEN, data.token)
+    const user = {
+      id: data.user.id,
+      nickName: data.user.nickName,
+      avatarUrl: data.user.avatarUrl || "",
+      gender: data.user.gender || gender || 0,
+      membershipLabel: data.user.membershipLabel,
+      membershipExpire: data.user.membershipExpire,
+      loginTime: Date.now()
+    }
+    setUser(user)
+    initDefaultMessages()
+    return syncQuizAfterLogin().then(() => user)
+  })
+}
+
+function loginWithWechat(profile) {
+  return wxLogin().then((code) => completeLogin(code, profile || {}))
+}
+
+function authorizeAndLogin() {
+  return requestWeChatProfile().then((info) => {
+    wx.showLoading({ title: "登录中", mask: true })
+    return loginWithWechat(info).finally(() => {
+      wx.hideLoading()
     })
+  })
+}
+
+function requireLogin(tips) {
+  if (isLoggedIn()) return Promise.resolve(getUser())
+  return new Promise((resolve, reject) => {
+    wx.showModal({
+      title: "需要登录",
+      content: tips || "登录后做题记录、错题和收藏会保存到您的微信账号",
+      confirmText: "微信授权",
+      success(res) {
+        if (!res.confirm) {
+          const err = new Error("未登录")
+          err.code = "LOGIN_CANCEL"
+          reject(err)
+          return
+        }
+        authorizeAndLogin()
+          .catch((err) => {
+            if (err && err.code === "AUTH_CANCEL") throw err
+            wx.showLoading({ title: "登录中", mask: true })
+            return loginWithWechat().finally(() => wx.hideLoading())
+          })
+          .then((user) => {
+            wx.showToast({ title: "登录成功", icon: "success" })
+            resolve(user)
+          })
+          .catch(reject)
+      },
+      fail: reject
+    })
+  })
 }
 
 function refreshProfile() {
@@ -75,12 +203,35 @@ function refreshProfile() {
       id: profile.id,
       nickName: profile.nickName,
       avatarUrl: profile.avatarUrl || "",
+      gender: profile.gender || 0,
       membershipLabel: profile.membership?.label || "普通用户",
       membershipExpire: profile.membership?.expireAt || null,
       stats: profile.stats
     }
     setUser(user)
     return user
+  })
+}
+
+function updateProfile(payload) {
+  if (!config.useApi) {
+    const user = { ...getUser(), ...payload }
+    setUser(user)
+    return Promise.resolve(user)
+  }
+  return authApi.updateProfile(payload).then((data) => applyServerUser(data))
+}
+
+function uploadAvatar(filePath) {
+  if (!config.useApi) {
+    const user = { ...getUser(), avatarUrl: filePath }
+    setUser(user)
+    return Promise.resolve(filePath)
+  }
+  return authApi.uploadAvatar(filePath).then((data) => {
+    const avatarUrl = data.avatarUrl
+    setUser({ ...getUser(), avatarUrl })
+    return avatarUrl
   })
 }
 
@@ -128,8 +279,14 @@ module.exports = {
   getToken,
   setUser,
   isLoggedIn,
+  needsProfile,
+  isAnonymousProfile,
   loginWithWechat,
+  authorizeAndLogin,
+  requireLogin,
   refreshProfile,
+  updateProfile,
+  uploadAvatar,
   logout,
   initDefaultMessages
 }

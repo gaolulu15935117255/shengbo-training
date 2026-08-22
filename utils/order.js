@@ -67,6 +67,7 @@ function getOrderStatusLabel(status) {
 function formatOrderTime(timestamp) {
   if (!timestamp) return ""
   const d = new Date(timestamp)
+  if (Number.isNaN(d.getTime())) return ""
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`
 }
 

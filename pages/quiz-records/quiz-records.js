@@ -1,4 +1,6 @@
-const { getRecords, formatDuration } = require("../../utils/quiz")
+const { getRecords, formatDuration, syncRecords } = require("../../utils/quiz")
+const auth = require("../../utils/auth")
+const config = require("../../config/api")
 
 const modeLabels = {
   chapter: "章节练习",
@@ -14,13 +16,23 @@ Page({
   },
 
   onShow() {
-    const records = getRecords().map((r) => ({
-      ...r,
-      modeLabel: modeLabels[r.mode] || r.mode,
-      timeText: this.formatTime(r.time),
-      durationText: r.duration ? formatDuration(r.duration) : ""
-    }))
-    this.setData({ records })
+    const render = (list) => {
+      const records = (list || getRecords()).map((r) => ({
+        ...r,
+        modeLabel: modeLabels[r.mode] || r.mode,
+        timeText: this.formatTime(r.time),
+        durationText: r.duration ? formatDuration(r.duration) : ""
+      }))
+      this.setData({ records })
+    }
+
+    if (config.useApi && auth.getToken()) {
+      syncRecords()
+        .then(render)
+        .catch(() => render())
+      return
+    }
+    render()
   },
 
   formatTime(timestamp) {

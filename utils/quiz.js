@@ -4,20 +4,39 @@ const auth = require("./auth")
 const { quizApi } = require("./api")
 const { getTypeLabel } = require("../data/questions")
 
+function scopedKey(baseKey) {
+  const user = auth.getUser()
+  if (user && user.id) return `${baseKey}_u${user.id}`
+  return `${baseKey}_guest`
+}
+
+function readScoped(baseKey, defaultValue) {
+  const scoped = storage.get(scopedKey(baseKey), null)
+  if (scoped !== null && scoped !== undefined && scoped !== "") return scoped
+  if (!auth.getUser() || !auth.getUser().id) {
+    return storage.get(baseKey, defaultValue)
+  }
+  return defaultValue
+}
+
+function writeScoped(baseKey, value) {
+  storage.set(scopedKey(baseKey), value)
+}
+
 function getWrongIds() {
-  return storage.get(storage.KEYS.WRONG, [])
+  return readScoped(storage.KEYS.WRONG, [])
 }
 
 function getFavoriteIds() {
-  return storage.get(storage.KEYS.FAVORITE, [])
+  return readScoped(storage.KEYS.FAVORITE, [])
 }
 
 function getRecords() {
-  return storage.get(storage.KEYS.RECORDS, [])
+  return readScoped(storage.KEYS.RECORDS, [])
 }
 
 function getQuizStats() {
-  return storage.get(storage.KEYS.QUIZ_STATS, {
+  return readScoped(storage.KEYS.QUIZ_STATS, {
     totalAnswered: 0,
     totalCorrect: 0,
     examHighScore: 0,
@@ -30,17 +49,17 @@ function addWrong(questionId) {
   const ids = getWrongIds()
   if (!ids.includes(questionId)) {
     ids.push(questionId)
-    storage.set(storage.KEYS.WRONG, ids)
+    writeScoped(storage.KEYS.WRONG, ids)
   }
 }
 
 function removeWrong(questionId) {
   const ids = getWrongIds().filter((id) => id !== questionId)
-  storage.set(storage.KEYS.WRONG, ids)
+  writeScoped(storage.KEYS.WRONG, ids)
 }
 
 function clearWrong() {
-  storage.set(storage.KEYS.WRONG, [])
+  writeScoped(storage.KEYS.WRONG, [])
 }
 
 function toggleFavorite(questionId) {
@@ -48,11 +67,11 @@ function toggleFavorite(questionId) {
   const index = ids.indexOf(questionId)
   if (index >= 0) {
     ids.splice(index, 1)
-    storage.set(storage.KEYS.FAVORITE, ids)
+    writeScoped(storage.KEYS.FAVORITE, ids)
     return false
   }
   ids.push(questionId)
-  storage.set(storage.KEYS.FAVORITE, ids)
+  writeScoped(storage.KEYS.FAVORITE, ids)
   return true
 }
 
@@ -76,8 +95,23 @@ function saveRecord(record) {
     time: Date.now()
   })
   if (records.length > 50) records.length = 50
-  storage.set(storage.KEYS.RECORDS, records)
+  writeScoped(storage.KEYS.RECORDS, records)
   updateStats(record)
+
+  if (config.useApi && auth.getToken()) {
+    return quizApi
+      .saveRecord({
+        mode: record.mode,
+        categoryId: record.categoryId || null,
+        subcategoryId: record.subcategoryId || null,
+        totalCount: record.total || 0,
+        correctCount: record.correct || 0,
+        score: record.score || 0,
+        durationSec: record.duration || null
+      })
+      .catch(() => {})
+  }
+  return Promise.resolve()
 }
 
 function updateStats(record) {
@@ -92,7 +126,7 @@ function updateStats(record) {
     if (stats.lastStudyDate) stats.studyDays += 1
     stats.lastStudyDate = today
   }
-  storage.set(storage.KEYS.QUIZ_STATS, stats)
+  writeScoped(storage.KEYS.QUIZ_STATS, stats)
 }
 
 function formatDate(date) {
@@ -121,7 +155,7 @@ function syncWrongIds() {
   }
   return quizApi.wrongIds().then((data) => {
     const ids = data.questionIds || []
-    storage.set(storage.KEYS.WRONG, ids)
+    writeScoped(storage.KEYS.WRONG, ids)
     return ids
   })
 }
@@ -132,9 +166,39 @@ function syncFavoriteIds() {
   }
   return quizApi.favoriteIds().then((data) => {
     const ids = data.questionIds || []
-    storage.set(storage.KEYS.FAVORITE, ids)
+    writeScoped(storage.KEYS.FAVORITE, ids)
     return ids
   })
+}
+
+function syncRecords() {
+  if (!config.useApi || !auth.getToken()) {
+    return Promise.resolve(getRecords())
+  }
+  return quizApi.records({ page: 1, pageSize: 50 }).then((data) => {
+    const list = (data.list || []).map((item) => ({
+      id: item.id,
+      mode: item.mode,
+      total: item.total,
+      correct: item.correct,
+      score: item.score,
+      duration: item.duration,
+      time: item.time ? new Date(item.time).getTime() : Date.now()
+    }))
+    writeScoped(storage.KEYS.RECORDS, list)
+    return list
+  })
+}
+
+function syncAllUserData() {
+  if (!config.useApi || !auth.getToken()) {
+    return Promise.resolve()
+  }
+  return Promise.all([
+    syncWrongIds().catch(() => {}),
+    syncFavoriteIds().catch(() => {}),
+    syncRecords().catch(() => {})
+  ])
 }
 
 function clearWrongRemote() {
@@ -155,7 +219,7 @@ function toggleFavoriteRemote(questionId) {
         const index = ids.indexOf(questionId)
         if (index >= 0) ids.splice(index, 1)
       }
-      storage.set(storage.KEYS.FAVORITE, ids)
+      writeScoped(storage.KEYS.FAVORITE, ids)
       return data.favorited
     })
   }
@@ -175,6 +239,8 @@ module.exports = {
   toggleFavoriteRemote,
   syncWrongIds,
   syncFavoriteIds,
+  syncRecords,
+  syncAllUserData,
   isFavorite,
   checkAnswer,
   saveRecord,

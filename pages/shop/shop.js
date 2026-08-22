@@ -33,7 +33,7 @@ Page({
   },
 
   onShow() {
-    this.refreshPurchased()
+    this.loadProducts(this.data.activeType || this.initialType || "all")
   },
 
   loadProducts(type) {
